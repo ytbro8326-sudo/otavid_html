@@ -739,7 +739,11 @@
         function getProxyUrl(url) {
             if (!url) return '';
             if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
-            return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://otakuvid.online/`;
+            const cleanUrl = url.split('?')[0].toLowerCase();
+            if (cleanUrl.endsWith('.txt')) {
+                return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://otakuvid.online/`;
+            }
+            return url;
         }
 
         async function loadAllDatasets() {
@@ -1088,7 +1092,7 @@
 
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
-            if (proxiedUrl.includes('.m3u8')) {
+            if (proxiedUrl.includes('.m3u8') || proxiedUrl.includes('.txt') || (stream.url && stream.url.includes('.txt'))) {
                 if (Hls.isSupported()) {
                     hlsInstance = new Hls();
                     hlsInstance.loadSource(proxiedUrl);
