@@ -673,7 +673,7 @@
                         </div>
                         <div id="quality-row"></div>
                         <div id="sp-loading" style="display:none">
-                            <div class="spin"></div> Fetching streams&#8230;
+                            <div class="spin"></div> <span class="sp-label">Fetching streams&#8230;</span>
                         </div>
                         <div id="sp-error" style="display:none"></div>
                         <div id="server-list"></div>
@@ -738,8 +738,31 @@
 
         // PROXY_HOST / DEFAULT_REFERER centralised so every caller (manifest AND
         // every sub-request hls.js makes) stays consistent.
-        const PROXY_HOST = 'https://anivexa.onrender.com/proxy';
+        const PROXY_ORIGIN = 'https://anivexa.onrender.com';
+        const PROXY_HOST = `${PROXY_ORIGIN}/proxy`;
         const DEFAULT_REFERER = 'https://otakuhg.site/';
+
+        // ---- Proxy warm-up -------------------------------------------------
+        // anivexa.onrender.com runs on Render's free tier, which spins the
+        // service down after ~15 minutes of inactivity. A cold instance can
+        // take 20-50+ seconds to wake up on its next request. hls.js's default
+        // timeouts (10s manifest/level, 20s fragment) give up long before that,
+        // which is exactly why playback "sometimes works, sometimes doesn't" -
+        // it depends on whether the dyno happened to already be awake.
+        //
+        // We fire a fire-and-forget ping as early as possible (page load, and
+        // again the instant the user asks for an episode) so the dyno is warm
+        // by the time hls.js actually needs it. This is best-effort: failures
+        // here are ignored, it's just a warm-up nudge.
+        let proxyWarm = false;
+        let proxyWarmupPromise = null;
+        function warmupProxy() {
+            if (proxyWarmupPromise) return proxyWarmupPromise;
+            proxyWarmupPromise = fetch(PROXY_ORIGIN, { mode: 'no-cors', cache: 'no-store' })
+                .catch(() => { })
+                .finally(() => { proxyWarm = true; });
+            return proxyWarmupPromise;
+        }
 
         function getProxyUrl(url, referer = DEFAULT_REFERER) {
             if (!url) return '';
@@ -749,6 +772,190 @@
             // Never try to proxy local/blob/data URLs.
             if (/^(blob:|data:)/i.test(url)) return url;
             return `${PROXY_HOST}?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}`;
+        }
+
+        // =====================================================================
+        // ADVANCED PROXY-AWARE HLS LOADER
+        // =====================================================================
+        // Why xhrSetup alone isn't enough:
+        // A master playlist can point to variant/level playlists with a RELATIVE
+        // path. Those level playlists can in turn point to segments and
+        // #EXT-X-KEY URIs, ALSO often relative. hls.js resolves every relative
+        // reference against the URL of the document it was just parsed from.
+        //
+        // If we ever hand hls.js (or its parser) a PROXIED url as "the current
+        // document's URL", every relative reference inside gets resolved against
+        // the proxy's own origin instead of the real CDN directory - producing
+        // garbage URLs a few levels deep even if the very first request worked.
+        // This is why playback can succeed for the master.txt itself yet still
+        // die shortly after: the corruption happens on the SECOND hop (level
+        // playlist or key), not the first.
+        //
+        // The fix: replace hls.js's entire network layer with a custom Loader
+        // that keeps track of the TRUE (unproxied) URL at every single level -
+        // manifest, level playlist, key, and fragment - and only proxies the
+        // request at the very last moment, right before the fetch() call fires.
+        // Text responses that look like playlists get every relative URI (plain
+        // lines AND URI="..." attributes in #EXT-X-KEY / #EXT-X-MAP) resolved to
+        // an ABSOLUTE (still real, not yet proxied) URL before being handed back
+        // to hls.js. That absolute URL becomes "context.url" for whatever hls.js
+        // requests next, so this stays correct no matter how many levels deep the
+        // playlist hierarchy goes.
+        // =====================================================================
+
+        // The referer currently in effect for the stream hls.js is playing.
+        // Set once per playStream() call, read by every request the custom
+        // loader below makes (manifest, level, key, fragment).
+        let CURRENT_STREAM_REFERER = DEFAULT_REFERER;
+
+        function resolveAbsoluteUrl(possiblyRelative, baseUrl) {
+            // Already absolute (has a scheme) - return untouched. Do NOT run
+            // this through new URL(), which would force-lowercase the host.
+            if (/^[a-z][a-z0-9+.-]*:\/\//i.test(possiblyRelative)) return possiblyRelative;
+
+            // Protocol-relative ("//host/path") - borrow the base's scheme only.
+            if (possiblyRelative.startsWith('//')) {
+                const scheme = (baseUrl.match(/^[a-z][a-z0-9+.-]*:/i) || ['https:'])[0];
+                return scheme + possiblyRelative;
+            }
+
+            // Genuinely relative path. CRITICAL: these obfuscated CDN hostnames
+            // (e.g. "eTOjdo3Yv1iw.somehost.shop") are mixed-case tokens the
+            // origin validates case-sensitively. The WHATWG URL parser used by
+            // `new URL(rel, base).href` ALWAYS force-lowercases hostnames per
+            // spec - that's true in every browser, not a quirk we can configure
+            // away. So we split the base into its authority (scheme+host, kept
+            // as an exact-case string) and its path, then use the URL API only
+            // to resolve the PATH portion against a disposable dummy host -
+            // that gets us battle-tested "../", "./" and query-string handling
+            // for free, without ever letting the real hostname pass through the
+            // part of the API that mangles case.
+            const m = baseUrl.match(/^([a-z][a-z0-9+.-]*:\/\/[^\/?#]+)([^?#]*)/i);
+            if (!m) return possiblyRelative; // malformed base, best effort
+            const authority = m[1];
+            const basePath = m[2] || '/';
+            const DUMMY = 'http://relative-resolve.invalid';
+            const resolvedPath = new URL(possiblyRelative, DUMMY + basePath).href.slice(DUMMY.length);
+            return authority + resolvedPath;
+        }
+
+        function looksLikePlaylist(text) {
+            return typeof text === 'string' && text.trimStart().startsWith('#EXTM3U');
+        }
+
+        // Resolves every relative URI in a playlist to an ABSOLUTE (still
+        // unproxied) URL against baseUrl. Does NOT proxy anything here - that
+        // happens later, per-request, inside the loader's load().
+        function rewritePlaylistUrlsToAbsolute(text, baseUrl) {
+            const attrUriRegex = /URI="([^"]+)"/i;
+            return text.split(/\r?\n/).map(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return line;
+
+                if (trimmed.startsWith('#')) {
+                    // Tags carrying a URI="..." attribute: #EXT-X-KEY, #EXT-X-MAP,
+                    // #EXT-X-MEDIA (audio/subtitle groups), etc.
+                    if (attrUriRegex.test(trimmed)) {
+                        return line.replace(attrUriRegex, (m, uri) =>
+                            `URI="${resolveAbsoluteUrl(uri, baseUrl)}"`);
+                    }
+                    return line;
+                }
+
+                // A bare line that isn't a tag is a URI: either a variant
+                // playlist reference (master) or a segment reference (level).
+                return resolveAbsoluteUrl(trimmed, baseUrl);
+            }).join('\n');
+        }
+
+        class ProxyAwareHlsLoader {
+            constructor(config) {
+                this.config = config;
+                this.stats = {
+                    aborted: false, loaded: 0, retry: 0, total: 0,
+                    chunkCount: 0, bwEstimate: 0,
+                    loading: { start: 0, first: 0, end: 0 },
+                    parsing: { start: 0, end: 0 },
+                    buffering: { start: 0, first: 0, end: 0 },
+                };
+                this.context = null;
+                this.callbacks = null;
+                this.controller = null;
+                this._timeoutId = null;
+            }
+
+            destroy() { this.abort(); }
+
+            abort() {
+                if (this._timeoutId) { clearTimeout(this._timeoutId); this._timeoutId = null; }
+                if (this.controller && !this.stats.aborted) {
+                    this.stats.aborted = true;
+                    try { this.controller.abort(); } catch (e) { }
+                }
+            }
+
+            load(context, config, callbacks) {
+                this.context = context;
+                this.callbacks = callbacks;
+                this.controller = new AbortController();
+
+                // context.url is always the TRUE, unproxied, absolute URL at this
+                // point - either the one we originally passed to loadSource(), or
+                // one we produced via rewritePlaylistUrlsToAbsolute() on a prior
+                // hop. We proxy it ONLY for the actual network call below.
+                const originalUrl = context.url;
+                const referer = CURRENT_STREAM_REFERER;
+                const proxiedUrl = getProxyUrl(originalUrl, referer);
+                const isBinary = context.responseType === 'arraybuffer';
+                const timeoutMs = isBinary ? 40000 : 30000; // generous: proxy hop can be slow
+
+                const start = performance.now();
+                this.stats.loading.start = start;
+
+                this._timeoutId = setTimeout(() => this.abort(), timeoutMs);
+
+                fetch(proxiedUrl, { signal: this.controller.signal, cache: 'no-store' })
+                    .then(async (res) => {
+                        if (this._timeoutId) { clearTimeout(this._timeoutId); this._timeoutId = null; }
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                        this.stats.loading.first = performance.now();
+
+                        let data;
+                        if (isBinary) {
+                            data = await res.arrayBuffer();
+                            this.stats.loaded = this.stats.total = data.byteLength;
+                        } else {
+                            let text = await res.text();
+                            if (looksLikePlaylist(text)) {
+                                text = rewritePlaylistUrlsToAbsolute(text, originalUrl);
+                            }
+                            data = text;
+                            this.stats.loaded = this.stats.total = text.length;
+                        }
+
+                        this.stats.loading.end = performance.now();
+                        this.callbacks.onSuccess(
+                            { url: originalUrl, data },
+                            this.stats,
+                            context,
+                            null
+                        );
+                    })
+                    .catch((err) => {
+                        if (this._timeoutId) { clearTimeout(this._timeoutId); this._timeoutId = null; }
+                        if (this.stats.aborted) {
+                            if (this.callbacks.onAbort) this.callbacks.onAbort(this.stats, context, null);
+                            return;
+                        }
+                        if (this.callbacks.onError) {
+                            this.callbacks.onError(
+                                { code: (err && err.status) || 0, text: (err && err.message) || 'proxy fetch failed' },
+                                context, null, this.stats
+                            );
+                        }
+                    });
+            }
         }
 
         async function loadAllDatasets() {
@@ -1097,16 +1304,12 @@
             // default if the dataset entry doesn't specify one.
             const streamReferer = stream.referer || DEFAULT_REFERER;
 
-            // IMPORTANT: hls.js resolves every relative URI it encounters inside a
-            // playlist (variant playlists, keys, segments) against whatever URL
-            // you pass to loadSource(). If we pass the PROXIED url here, that base
-            // becomes "anivexa.onrender.com" instead of the real CDN directory, and
-            // every relative reference inside the manifest resolves to a
-            // nonsensical address on the proxy host itself (404s / broken
-            // playback), even though xhrSetup below tries to proxy each request.
-            // So: hls.js gets the REAL url for all its internal bookkeeping, and
-            // the proxying happens only at the very last step, in xhrSetup, right
-            // before the actual network call is made.
+            // IMPORTANT: hls.js (and the custom loader below) resolves every
+            // relative URI it encounters inside a playlist (variant playlists,
+            // keys, segments) against the URL that document was fetched from.
+            // The ProxyAwareHlsLoader tracks the TRUE (unproxied) URL at every
+            // hop and only proxies at the moment of the actual network call -
+            // see the loader's comments above for the full explanation.
             const realUrl = stream.url;
             const proxiedUrl = getProxyUrl(realUrl, streamReferer); // used only for the non-hls.js (native) fallback path below
 
@@ -1114,39 +1317,100 @@
 
             if (realUrl.includes('.m3u8') || realUrl.includes('.txt')) {
                 if (Hls.isSupported()) {
-                    hlsInstance = new Hls({
-                        // THE ACTUAL FIX:
-                        // Without this, hls.js only respects the proxied master URL
-                        // we pass to loadSource(). Every request it makes AFTER that
-                        // (variant/level playlists, AES keys, and every .ts/.m4s
-                        // fragment listed inside the playlist) is fired directly at
-                        // the source CDN with the browser's own Origin/Referer,
-                        // bypassing the proxy entirely. That's why the master loads
-                        // but playback then stalls or never starts: the CDN rejects
-                        // or CORS-blocks the un-proxied, wrong-referer segment
-                        // requests. xhrSetup runs on every single request hls.js
-                        // makes, so we rewrite the URL through the proxy here too.
-                        xhrSetup: function (xhr, url) {
-                            const rewritten = getProxyUrl(url, streamReferer);
-                            xhr.open('GET', rewritten, true);
-                        },
-                        // Same idea for fetch-based loading paths / low-latency mode.
-                        fetchSetup: function (context, initParams) {
-                            context.url = getProxyUrl(context.url, streamReferer);
-                            return new Request(context.url, initParams);
+                    let retryAttempt = 0;
+                    const MAX_RETRIES = 4;
+                    const RETRY_DELAYS_MS = [1500, 3000, 6000, 10000]; // backoff, room for a cold proxy dyno
+
+                    const buildHls = () => {
+                        CURRENT_STREAM_REFERER = streamReferer;
+                        return new Hls({
+                            // THE ACTUAL FIX: a fully custom loader (see
+                            // ProxyAwareHlsLoader above) that keeps the TRUE
+                            // absolute URL at every hop of the playlist
+                            // hierarchy (master -> level -> key/fragment) and
+                            // only proxies the request at the moment it's
+                            // actually sent. xhrSetup alone can't do this
+                            // because it can't rewrite relative URLs found
+                            // INSIDE a fetched playlist body - only a custom
+                            // loader that post-processes the response can.
+                            loader: ProxyAwareHlsLoader,
+
+                            // Generous retry budget: the proxy (anivexa.onrender.com,
+                            // a free-tier Render service) can be slow to respond,
+                            // especially right after a period of inactivity.
+                            manifestLoadingTimeOut: 30000,
+                            manifestLoadingMaxRetry: 6,
+                            manifestLoadingRetryDelay: 1500,
+                            manifestLoadingMaxRetryTimeout: 30000,
+                            levelLoadingTimeOut: 30000,
+                            levelLoadingMaxRetry: 6,
+                            levelLoadingRetryDelay: 1500,
+                            levelLoadingMaxRetryTimeout: 30000,
+                            fragLoadingTimeOut: 40000,
+                            fragLoadingMaxRetry: 8,
+                            fragLoadingRetryDelay: 1500,
+                            fragLoadingMaxRetryTimeout: 30000,
+                        });
+                    };
+
+                    const setStatus = (msg) => {
+                        const load = document.getElementById('sp-loading');
+                        const errEl = document.getElementById('sp-error');
+                        if (msg) {
+                            if (errEl) errEl.style.display = 'none';
+                            if (load) { load.style.display = 'flex'; }
+                            const label = load && load.querySelector('.sp-label');
+                            if (label) label.textContent = msg;
                         }
-                    });
-                    hlsInstance.loadSource(realUrl);
-                    hlsInstance.attachMedia(video);
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        video.play().catch(() => { video.muted = true; video.play(); });
-                    });
-                    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-                        console.error('HLS error:', data.type, data.details, data);
-                        if (data.fatal) {
+                    };
+
+                    const startHls = () => {
+                        if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+                        hlsInstance = buildHls();
+                        hlsInstance.loadSource(realUrl);
+                        hlsInstance.attachMedia(video);
+
+                        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                            retryAttempt = 0; // fully recovered, reset backoff counter
+                            document.getElementById('sp-loading').style.display = 'none';
+                            video.play().catch(() => { video.muted = true; video.play(); });
+                        });
+
+                        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                            console.error('HLS error:', data.type, data.details, data);
+                            if (!data.fatal) return;
+
                             switch (data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
-                                    hlsInstance.startLoad();
+                                    if (retryAttempt < MAX_RETRIES) {
+                                        const delay = RETRY_DELAYS_MS[retryAttempt] || RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
+                                        retryAttempt++;
+                                        setStatus(`Connection hiccup, retrying (${retryAttempt}/${MAX_RETRIES})...`);
+                                        // Fully re-init rather than just startLoad() -
+                                        // a cold-starting proxy can leave hls.js's
+                                        // internal state (and the video element)
+                                        // wedged, so a clean restart is more reliable
+                                        // than resuming the same broken session.
+                                        setTimeout(startHls, delay);
+                                    } else {
+                                        document.getElementById('sp-loading').style.display = 'none';
+                                        const errEl = document.getElementById('sp-error');
+                                        errEl.style.display = 'block';
+                                        errEl.innerHTML = '';
+                                        const msg = document.createElement('div');
+                                        msg.textContent = 'Stream failed to load after several attempts. The source or proxy may be temporarily down.';
+                                        const retryBtn = document.createElement('button');
+                                        retryBtn.textContent = 'Retry';
+                                        retryBtn.style.cssText = 'margin-top:8px;padding:6px 16px;border:none;border-radius:6px;background:#7c6dfa;color:#fff;font-weight:600;cursor:pointer;';
+                                        retryBtn.onclick = () => {
+                                            retryAttempt = 0;
+                                            errEl.style.display = 'none';
+                                            warmupProxy();
+                                            startHls();
+                                        };
+                                        errEl.appendChild(msg);
+                                        errEl.appendChild(retryBtn);
+                                    }
                                     break;
                                 case Hls.ErrorTypes.MEDIA_ERROR:
                                     hlsInstance.recoverMediaError();
@@ -1155,8 +1419,10 @@
                                     hlsInstance.destroy();
                                     break;
                             }
-                        }
-                    });
+                        });
+                    };
+
+                    startHls();
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = proxiedUrl;
                     video.play().catch(() => { video.muted = true; video.play(); });
@@ -1316,6 +1582,11 @@
             currentLang = lang;
             const myToken = ++_fetchToken;
 
+            // Kick the proxy awake immediately, in parallel with everything
+            // else below - don't await it, it's just a warm-up nudge so it's
+            // hopefully already awake by the time hls.js needs it.
+            warmupProxy();
+
             document.getElementById('inp-mal').value = malId;
             document.getElementById('inp-ep').value = ep;
             document.getElementById('btn-dub').classList.toggle('active', lang === 'dub');
@@ -1458,6 +1729,7 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
+            warmupProxy(); // wake the proxy dyno as early as the page itself loads
             const params = parseParamsFromUrl();
             if (params) {
                 showPlayer(params.malId, params.epNum, params.lang);
