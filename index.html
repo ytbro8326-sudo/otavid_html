@@ -1,1412 +1,1147 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OtakuVid MegaPlay Player</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            background: #0a0a0f;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            color: #e2e2e8;
-            overflow: hidden;
-        }
-
-        #app {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-        }
-
-        #topbar {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 14px;
-            background: #13131a;
-            border-bottom: 1px solid #222230;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            overflow: visible;
-        }
-
-        #topbar-inner {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            width: 100%;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height .28s ease, padding .28s ease;
-            padding: 0;
-        }
-
-        #topbar-inner.open {
-            max-height: 160px;
-            padding: 8px 0;
-        }
-
-        .brand {
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: #7c6dfa;
-            white-space: nowrap;
-        }
-
-        .field-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .field-group label {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            white-space: nowrap;
-        }
-
-        .field-group input {
-            width: 80px;
-            padding: 4px 8px;
-            background: #1e1e2e;
-            border: 1px solid #2e2e42;
-            border-radius: 6px;
-            color: #e2e2e8;
-            font-size: 13px;
-            outline: none;
-            transition: border-color .15s;
-        }
-
-        .field-group input:focus {
-            border-color: #7c6dfa;
-        }
-
-        #lang-toggle {
-            display: flex;
-            background: #1e1e2e;
-            border: 1px solid #2e2e42;
-            border-radius: 8px;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        #lang-toggle button {
-            padding: 5px 14px;
-            font-size: 12px;
-            font-weight: 600;
-            border: none;
-            background: transparent;
-            color: #888;
-            cursor: pointer;
-            transition: background .15s, color .15s;
-        }
-
-        #lang-toggle button.active {
-            background: #7c6dfa;
-            color: #fff;
-        }
-
-        #autonext-wrap {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            flex-shrink: 0;
-        }
-
-        #autonext-wrap span {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            white-space: nowrap;
-        }
-
-        .switch {
-            position: relative;
-            width: 36px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            inset: 0;
-            background: #2e2e42;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background .2s;
-        }
-
-        .slider::before {
-            content: '';
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            left: 3px;
-            top: 3px;
-            background: #fff;
-            border-radius: 50%;
-            transition: transform .2s;
-        }
-
-        .switch input:checked+.slider {
-            background: #7c6dfa;
-        }
-
-        .switch input:checked+.slider::before {
-            transform: translateX(16px);
-        }
-
-        .ctrl-btns {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .bar-btn {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background .15s, transform .1s;
-        }
-
-        .bar-btn:active {
-            transform: scale(.96);
-        }
-
-        #btn-prev-bar,
-        #btn-next-bar {
-            background: #1e1e2e;
-            color: #aaa;
-            border: 1px solid #2e2e42;
-        }
-
-        #btn-prev-bar:hover,
-        #btn-next-bar:hover {
-            background: rgba(124, 109, 250, .18);
-            border-color: #7c6dfa;
-            color: #fff;
-        }
-
-        #btn-go {
-            background: #7c6dfa;
-            color: #fff;
-        }
-
-        #btn-go:hover {
-            background: #6a5be0;
-        }
-
-        #player-wrap {
-            flex: 1;
-            position: relative;
-            background: #000;
-            overflow: hidden;
-        }
-
-        #player-wrap iframe,
-        #player-wrap video {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-            z-index: 1;
-            object-fit: contain;
-        }
-
-        #placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            color: #444;
-            z-index: 0;
-        }
-
-        #placeholder svg {
-            opacity: .3;
-        }
-
-        #placeholder p {
-            font-size: 14px;
-        }
-
-        #placeholder .hint {
-            font-size: 12px;
-            color: #333;
-        }
-
-        #toggle-bar-btn {
-            position: absolute;
-            top: 10px;
-            right: 12px;
-            z-index: 20;
-            width: 32px;
-            height: 32px;
-            background: rgba(19, 19, 26, .85);
-            border: 1px solid #2e2e42;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-            transition: background .15s, border-color .15s;
-        }
-
-        #toggle-bar-btn:hover {
-            background: rgba(40, 40, 60, .95);
-            border-color: #7c6dfa;
-        }
-
-        #toggle-bar-btn svg {
-            display: block;
-            transition: transform .25s ease;
-        }
-
-        #toggle-bar-btn.open svg {
-            transform: rotate(180deg);
-        }
-
-        #srv-wrap {
-            position: relative;
-            margin-left: auto;
-            flex-shrink: 0;
-        }
-
-        #srv-toggle-btn {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 14px;
-            background: #1e1e2e;
-            border: 1px solid #2e2e42;
-            border-radius: 8px;
-            color: #aaa;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .15s;
-            white-space: nowrap;
-        }
-
-        #srv-toggle-btn.show {
-            display: flex;
-        }
-
-        #srv-toggle-btn:hover,
-        #srv-toggle-btn.open {
-            border-color: #7c6dfa;
-            color: #fff;
-            background: rgba(124, 109, 250, .18);
-        }
-
-        #server-panel {
-            position: absolute;
-            top: calc(100% + 6px);
-            right: 0;
-            z-index: 100;
-            background: #13131a;
-            border: 1px solid #2e2e42;
-            border-radius: 12px;
-            padding: 12px 14px;
-            min-width: 260px;
-            max-width: 340px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, .6);
-            display: none;
-        }
-
-        #server-panel.visible {
-            display: block;
-        }
-
-        .sp-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .sp-title {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-        }
-
-        #sp-close {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
-            padding: 0 2px;
-        }
-
-        #sp-close:hover {
-            color: #aaa;
-        }
-
-        #quality-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .q-pill {
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid #2e2e42;
-            background: #1e1e2e;
-            color: #888;
-            transition: all .15s;
-        }
-
-        .q-pill.active {
-            background: #7c6dfa;
-            border-color: #7c6dfa;
-            color: #fff;
-        }
-
-        .q-pill:hover:not(.active):not(.unavail) {
-            border-color: #7c6dfa;
-            color: #ccc;
-        }
-
-        .q-pill.unavail {
-            opacity: .3;
-            cursor: default;
-            pointer-events: none;
-        }
-
-        #server-list {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            max-height: 220px;
-            overflow-y: auto;
-        }
-
-        #server-list::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        #server-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        #server-list::-webkit-scrollbar-thumb {
-            background: #2e2e42;
-            border-radius: 4px;
-        }
-
-        .srv-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 10px;
-            border-radius: 8px;
-            border: 1px solid #2e2e42;
-            background: #1a1a26;
-            color: #ccc;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .15s;
-            text-align: left;
-            width: 100%;
-        }
-
-        .srv-btn:hover {
-            background: rgba(124, 109, 250, .18);
-            border-color: #7c6dfa;
-            color: #fff;
-        }
-
-        .srv-btn.active {
-            background: rgba(124, 109, 250, .28);
-            border-color: #7c6dfa;
-            color: #fff;
-        }
-
-        .srv-badge {
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            background: #2e2e42;
-            color: #777;
-            margin-left: 6px;
-            flex-shrink: 0;
-        }
-
-        .srv-btn.active .srv-badge {
-            background: #7c6dfa;
-            color: #fff;
-        }
-
-        #sp-loading {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #666;
-            font-size: 12px;
-            padding: 8px 0;
-        }
-
-        .spin {
-            width: 14px;
-            height: 14px;
-            border: 2px solid #2e2e42;
-            border-top-color: #7c6dfa;
-            border-radius: 50%;
-            animation: spin .7s linear infinite;
-            flex-shrink: 0;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        #sp-error {
-            color: #f87171;
-            font-size: 12px;
-            padding: 4px 0;
-        }
-
-        #autonext-overlay {
-            display: none;
-            position: absolute;
-            bottom: 28px;
-            right: 28px;
-            background: rgba(10, 10, 15, .9);
-            border: 1px solid #2e2e42;
-            border-radius: 14px;
-            padding: 14px 20px;
-            min-width: 220px;
-            z-index: 30;
-            backdrop-filter: blur(6px);
-        }
-
-        .an-title {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-            margin-bottom: 6px;
-        }
-
-        .an-ep {
-            font-size: 15px;
-            font-weight: 700;
-            color: #e2e2e8;
-            margin-bottom: 10px;
-        }
-
-        #an-bar-bg {
-            width: 100%;
-            height: 4px;
-            background: #2e2e42;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        #an-bar {
-            height: 100%;
-            width: 100%;
-            background: #7c6dfa;
-            border-radius: 4px;
-            transform-origin: left;
-            transition: transform linear;
-        }
-
-        .an-btns {
-            display: flex;
-            gap: 8px;
-        }
-
-        .an-btns button {
-            flex: 1;
-            padding: 6px 0;
-            border: none;
-            border-radius: 7px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s;
-        }
-
-        #an-btn-now {
-            background: #7c6dfa;
-            color: #fff;
-        }
-
-        #an-btn-now:hover {
-            background: #6a5be0;
-        }
-
-        #an-btn-cancel {
-            background: #1e1e2e;
-            color: #aaa;
-            border: 1px solid #2e2e42;
-        }
-
-        #an-btn-cancel:hover {
-            background: #2e2e42;
-        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html,body{width:100%;height:100%;background:#0a0a0f;font-family:'Segoe UI',system-ui,sans-serif;color:#e2e2e8;overflow:hidden}
+        #app{display:flex;flex-direction:column;width:100%;height:100%}
+
+        /* ── TOP BAR ── */
+        #topbar{position:relative;display:flex;align-items:center;gap:8px;padding:0 14px;background:#13131a;border-bottom:1px solid #222230;flex-shrink:0;flex-wrap:wrap;overflow:visible}
+        #topbar-inner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;max-height:0;overflow:hidden;transition:max-height .28s ease,padding .28s ease;padding:0}
+        #topbar-inner.open{max-height:200px;padding:8px 0}
+        .brand{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c6dfa;white-space:nowrap}
+        .field-group{display:flex;align-items:center;gap:6px}
+        .field-group label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+        .field-group input{width:80px;padding:4px 8px;background:#1e1e2e;border:1px solid #2e2e42;border-radius:6px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s}
+        .field-group input:focus{border-color:#7c6dfa}
+        #lang-toggle{display:flex;background:#1e1e2e;border:1px solid #2e2e42;border-radius:8px;overflow:hidden;flex-shrink:0}
+        #lang-toggle button{padding:5px 14px;font-size:12px;font-weight:600;border:none;background:transparent;color:#888;cursor:pointer;transition:background .15s,color .15s}
+        #lang-toggle button.active{background:#7c6dfa;color:#fff}
+        #autonext-wrap{display:flex;align-items:center;gap:7px;flex-shrink:0}
+        #autonext-wrap span{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+        .switch{position:relative;width:36px;height:20px;flex-shrink:0}
+        .switch input{opacity:0;width:0;height:0}
+        .slider{position:absolute;inset:0;background:#2e2e42;border-radius:20px;cursor:pointer;transition:background .2s}
+        .slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+        .switch input:checked+.slider{background:#7c6dfa}
+        .switch input:checked+.slider::before{transform:translateX(16px)}
+        .ctrl-btns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+        .bar-btn{display:flex;align-items:center;gap:5px;padding:5px 14px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,transform .1s}
+        .bar-btn:active{transform:scale(.96)}
+        #btn-prev-bar,#btn-next-bar{background:#1e1e2e;color:#aaa;border:1px solid #2e2e42}
+        #btn-prev-bar:hover,#btn-next-bar:hover{background:rgba(124,109,250,.18);border-color:#7c6dfa;color:#fff}
+        #btn-go{background:#7c6dfa;color:#fff}
+        #btn-go:hover{background:#6a5be0}
+
+        /* ── PLAYER WRAP ── */
+        #player-wrap{flex:1;position:relative;background:#000;overflow:hidden}
+        #player-wrap iframe,#player-wrap video{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;object-fit:contain}
+        #placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#444;z-index:0}
+        #placeholder svg{opacity:.3}
+        #placeholder p{font-size:14px}
+        #placeholder .hint{font-size:12px;color:#333}
+
+        /* ── TOGGLE BTN ── */
+        #toggle-bar-btn{position:absolute;top:10px;right:12px;z-index:20;width:32px;height:32px;background:rgba(19,19,26,.85);border:1px solid #2e2e42;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
+        #toggle-bar-btn:hover{background:rgba(40,40,60,.95);border-color:#7c6dfa}
+        #toggle-bar-btn svg{display:block;transition:transform .25s ease}
+        #toggle-bar-btn.open svg{transform:rotate(180deg)}
+
+        /* ── DIRECT PLAY BTN (floating) ── */
+        #direct-play-fab{position:absolute;top:10px;right:52px;z-index:20;height:32px;padding:0 12px;background:rgba(124,109,250,.18);border:1px solid rgba(124,109,250,.5);border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#a78bfa;backdrop-filter:blur(4px);transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
+        #direct-play-fab:hover{background:rgba(124,109,250,.32);border-color:#7c6dfa;color:#fff}
+        #direct-play-fab svg{flex-shrink:0}
+
+        /* ── SERVER PANEL ── */
+        #srv-wrap{position:relative;margin-left:auto;flex-shrink:0}
+        #srv-toggle-btn{display:none;align-items:center;gap:6px;padding:5px 14px;background:#1e1e2e;border:1px solid #2e2e42;border-radius:8px;color:#aaa;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+        #srv-toggle-btn.show{display:flex}
+        #srv-toggle-btn:hover,#srv-toggle-btn.open{border-color:#7c6dfa;color:#fff;background:rgba(124,109,250,.18)}
+        #server-panel{position:absolute;top:calc(100% + 6px);right:0;z-index:100;background:#13131a;border:1px solid #2e2e42;border-radius:12px;padding:12px 14px;min-width:260px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
+        #server-panel.visible{display:block}
+        .sp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+        .sp-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.07em}
+        #sp-close{background:none;border:none;color:#666;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+        #sp-close:hover{color:#aaa}
+        #quality-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+        .q-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #2e2e42;background:#1e1e2e;color:#888;transition:all .15s}
+        .q-pill.active{background:#7c6dfa;border-color:#7c6dfa;color:#fff}
+        .q-pill:hover:not(.active):not(.unavail){border-color:#7c6dfa;color:#ccc}
+        .q-pill.unavail{opacity:.3;cursor:default;pointer-events:none}
+        #server-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto}
+        #server-list::-webkit-scrollbar{width:4px}
+        #server-list::-webkit-scrollbar-track{background:transparent}
+        #server-list::-webkit-scrollbar-thumb{background:#2e2e42;border-radius:4px}
+        .srv-btn{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;border:1px solid #2e2e42;background:#1a1a26;color:#ccc;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:left;width:100%}
+        .srv-btn:hover{background:rgba(124,109,250,.18);border-color:#7c6dfa;color:#fff}
+        .srv-btn.active{background:rgba(124,109,250,.28);border-color:#7c6dfa;color:#fff}
+        .srv-badge{font-size:10px;padding:2px 6px;border-radius:10px;background:#2e2e42;color:#777;margin-left:6px;flex-shrink:0}
+        .srv-btn.active .srv-badge{background:#7c6dfa;color:#fff}
+        #sp-loading{display:flex;align-items:center;gap:8px;color:#666;font-size:12px;padding:8px 0}
+        .spin{width:14px;height:14px;border:2px solid #2e2e42;border-top-color:#7c6dfa;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        #sp-error{color:#f87171;font-size:12px;padding:4px 0}
+
+        /* ── AUTO-NEXT ── */
+        #autonext-overlay{display:none;position:absolute;bottom:28px;right:28px;background:rgba(10,10,15,.9);border:1px solid #2e2e42;border-radius:14px;padding:14px 20px;min-width:220px;z-index:30;backdrop-filter:blur(6px)}
+        .an-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+        .an-ep{font-size:15px;font-weight:700;color:#e2e2e8;margin-bottom:10px}
+        #an-bar-bg{width:100%;height:4px;background:#2e2e42;border-radius:4px;overflow:hidden;margin-bottom:10px}
+        #an-bar{height:100%;width:100%;background:#7c6dfa;border-radius:4px;transform-origin:left;transition:transform linear}
+        .an-btns{display:flex;gap:8px}
+        .an-btns button{flex:1;padding:6px 0;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+        #an-btn-now{background:#7c6dfa;color:#fff}
+        #an-btn-now:hover{background:#6a5be0}
+        #an-btn-cancel{background:#1e1e2e;color:#aaa;border:1px solid #2e2e42}
+        #an-btn-cancel:hover{background:#2e2e42}
+
+        /* ══════════════════════════════════════════
+           DIRECT STREAM MODAL
+        ══════════════════════════════════════════ */
+        #direct-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+        #direct-modal-overlay.open{display:flex}
+        #direct-modal{background:#13131a;border:1px solid #2e2e42;border-radius:16px;padding:24px 26px;width:min(560px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.7);position:relative}
+        #direct-modal::-webkit-scrollbar{width:4px}
+        #direct-modal::-webkit-scrollbar-thumb{background:#2e2e42;border-radius:4px}
+        .dm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+        .dm-title{font-size:15px;font-weight:700;color:#e2e2e8;display:flex;align-items:center;gap:8px}
+        .dm-title svg{color:#7c6dfa}
+        #dm-close{background:none;border:none;color:#666;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;border-radius:6px;transition:color .15s,background .15s}
+        #dm-close:hover{color:#e2e2e8;background:#2e2e42}
+
+        /* section label */
+        .dm-section{margin-bottom:16px}
+        .dm-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+        .dm-label-badge{font-size:10px;padding:1px 7px;border-radius:10px;background:#7c6dfa22;color:#7c6dfa;border:1px solid #7c6dfa44;text-transform:none;letter-spacing:0;font-weight:600}
+
+        /* URL row */
+        .dm-url-row{display:flex;gap:6px;align-items:stretch}
+        .dm-url-row input{flex:1;padding:8px 12px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s;font-family:monospace}
+        .dm-url-row input:focus{border-color:#7c6dfa}
+        .dm-url-row input::placeholder{color:#444;font-family:'Segoe UI',system-ui,sans-serif}
+        .dm-url-row button{padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,transform .1s}
+        .dm-url-row button:active{transform:scale(.96)}
+        #dm-btn-paste{background:#1e1e2e;border:1px solid #2e2e42;color:#aaa}
+        #dm-btn-paste:hover{border-color:#7c6dfa;color:#a78bfa;background:rgba(124,109,250,.12)}
+
+        /* proxy indicator */
+        #proxy-status-row{margin-top:6px;display:flex;align-items:center;gap:8px;min-height:20px}
+        #proxy-status-dot{width:8px;height:8px;border-radius:50%;background:#2e2e42;flex-shrink:0;transition:background .3s}
+        #proxy-status-dot.active{background:#4ade80}
+        #proxy-status-dot.proxied{background:#facc15}
+        #proxy-status-dot.error{background:#f87171}
+        #proxy-status-text{font-size:11px;color:#666}
+
+        /* proxy config */
+        .dm-proxy-row{display:flex;gap:6px;margin-top:6px}
+        .dm-proxy-row input{flex:1;padding:7px 10px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:12px;outline:none;transition:border-color .15s;font-family:monospace}
+        .dm-proxy-row input:focus{border-color:#7c6dfa}
+        .dm-proxy-row input::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
+        #dm-proxy-toggle{padding:7px 14px;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;background:#1e1e2e;border:1px solid #2e2e42;color:#888;transition:all .15s}
+        #dm-proxy-toggle.on{background:rgba(124,109,250,.18);border-color:#7c6dfa;color:#a78bfa}
+
+        /* headers */
+        .dm-headers-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+        .dm-header-row{display:flex;gap:6px;align-items:center}
+        .dm-header-row input{flex:1;padding:6px 10px;background:#1a1a26;border:1px solid #2e2e42;border-radius:7px;color:#e2e2e8;font-size:12px;outline:none;transition:border-color .15s;font-family:monospace}
+        .dm-header-row input:focus{border-color:#7c6dfa}
+        .dm-header-row input::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
+        .dm-header-row .key-inp{width:130px;flex:none}
+        .dm-remove-hdr{background:none;border:none;color:#555;cursor:pointer;font-size:16px;line-height:1;padding:0 4px;border-radius:4px;transition:color .15s}
+        .dm-remove-hdr:hover{color:#f87171}
+        #dm-add-header{display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px dashed #2e2e42;border-radius:7px;background:none;color:#666;font-size:12px;cursor:pointer;transition:all .15s;margin-top:2px;width:100%;justify-content:center}
+        #dm-add-header:hover{border-color:#7c6dfa;color:#a78bfa;background:rgba(124,109,250,.07)}
+
+        /* origin */
+        #dm-origin-inp{width:100%;padding:8px 12px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s;font-family:monospace}
+        #dm-origin-inp:focus{border-color:#7c6dfa}
+        #dm-origin-inp::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
+
+        /* referer */
+        #dm-referer-inp{width:100%;padding:8px 12px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s;font-family:monospace}
+        #dm-referer-inp:focus{border-color:#7c6dfa}
+        #dm-referer-inp::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
+
+        /* play btn */
+        #dm-play-btn{width:100%;padding:11px;background:linear-gradient(135deg,#7c6dfa,#5b4be8);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s;margin-top:18px;letter-spacing:.02em}
+        #dm-play-btn:hover{opacity:.9}
+        #dm-play-btn:active{transform:scale(.98)}
+        #dm-play-btn .spin-sm{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+        #dm-play-btn.loading .spin-sm{display:block}
+        #dm-play-btn.loading .play-icon{display:none}
+
+        /* quick presets */
+        .dm-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+        .dm-preset-btn{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #2e2e42;background:#1e1e2e;color:#888;transition:all .15s}
+        .dm-preset-btn:hover{border-color:#7c6dfa;color:#a78bfa;background:rgba(124,109,250,.1)}
+
+        /* error toast inside modal */
+        #dm-error{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#f87171;display:none;margin-top:10px}
+
+        /* divider */
+        .dm-divider{border:none;border-top:1px solid #1e1e2e;margin:14px 0}
+
+        /* spinner extras in prefetch */
+        #prefetch-status{display:none;align-items:center;gap:5px;color:#4ade80;font-size:12px;font-weight:600;background:rgba(74,222,128,0.12);padding:5px 12px;border-radius:8px;border:1px solid rgba(74,222,128,0.25)}
+        #extract-spinner{display:none;align-items:center;gap:6px;color:#a78bfa;font-size:12px;font-weight:600;background:rgba(167,139,250,0.12);padding:5px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.25)}
+
+        /* currently playing banner inside modal */
+        #dm-now-playing{background:rgba(124,109,250,.1);border:1px solid rgba(124,109,250,.25);border-radius:8px;padding:9px 12px;display:none;margin-bottom:14px}
+        #dm-now-playing-label{font-size:10px;color:#7c6dfa;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:4px}
+        #dm-now-playing-url{font-size:11px;color:#aaa;font-family:monospace;word-break:break-all;line-height:1.5}
+
+        /* collapse toggle for advanced */
+        .dm-collapse-btn{display:flex;align-items:center;gap:5px;font-size:11px;color:#666;background:none;border:none;cursor:pointer;padding:0;transition:color .15s}
+        .dm-collapse-btn:hover{color:#a78bfa}
+        .dm-collapse-btn svg{transition:transform .2s}
+        .dm-collapse-btn.open svg{transform:rotate(180deg)}
+        .dm-collapsible{max-height:0;overflow:hidden;transition:max-height .25s ease}
+        .dm-collapsible.open{max-height:600px}
     </style>
 </head>
-
 <body>
-    <div id="app">
-        <div id="topbar">
-            <div id="topbar-inner">
-                <span class="brand">&#9654; OtakuVid</span>
+<div id="app">
 
-                <div class="field-group">
-                    <label>MAL ID</label>
-                    <input id="inp-mal" type="number" placeholder="e.g. 21" min="1">
-                </div>
-                <div class="field-group">
-                    <label>Episode</label>
-                    <input id="inp-ep" type="number" placeholder="e.g. 1" min="1">
-                </div>
+    <!-- ── TOP BAR ── -->
+    <div id="topbar">
+        <div id="topbar-inner">
+            <span class="brand">&#9654; OtakuVid</span>
 
-                <div id="lang-toggle">
-                    <button id="btn-dub" class="active" onclick="setLang('dub')">DUB</button>
-                    <button id="btn-sub" onclick="setLang('sub')">SUB</button>
-                </div>
-
-                <div id="autonext-wrap">
-                    <span>Auto-Next</span>
-                    <label class="switch">
-                        <input type="checkbox" id="chk-autonext" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="ctrl-btns">
-                    <button class="bar-btn" id="btn-prev-bar" onclick="goPrevEp()">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                        Prev
-                    </button>
-                    <button class="bar-btn" id="btn-go" onclick="loadPlayer()">&#9654; Play</button>
-                    <button class="bar-btn" id="btn-next-bar" onclick="goNextEp()">
-                        Next
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                    </button>
-                    <div id="extract-spinner" style="display:none; align-items:center; gap:6px; color:#a78bfa; font-size:12px; font-weight:600; background:rgba(167, 139, 250, 0.12); padding:5px 12px; border-radius:8px; border:1px solid rgba(167, 139, 250, 0.25);">
-                        <div class="spin"></div>
-                        <span>Extracting...</span>
-                    </div>
-                    <div id="prefetch-status" style="display:none; align-items:center; gap:5px; color:#4ade80; font-size:12px; font-weight:600; background:rgba(74, 222, 128, 0.12); padding:5px 12px; border-radius:8px; border:1px solid rgba(74, 222, 128, 0.25);">
-                        <span id="prefetch-icon">✓</span>
-                        <span id="prefetch-status-text">+50 Ep Ready</span>
-                    </div>
-                </div>
-
-                <div id="srv-wrap">
-                    <button id="srv-toggle-btn" onclick="toggleServerPanel()">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="3" width="20" height="4" rx="1" />
-                            <rect x="2" y="10" width="20" height="4" rx="1" />
-                            <rect x="2" y="17" width="20" height="4" rx="1" />
-                        </svg>
-                        Servers
-                    </button>
-                    <div id="server-panel">
-                        <div class="sp-row">
-                            <span class="sp-title">Servers &amp; Quality</span>
-                            <button id="sp-close" onclick="toggleServerPanel()">&#10005;</button>
-                        </div>
-                        <div id="quality-row"></div>
-                        <div id="sp-loading" style="display:none">
-                            <div class="spin"></div> Fetching streams&#8230;
-                        </div>
-                        <div id="sp-error" style="display:none"></div>
-                        <div id="server-list"></div>
-                    </div>
-                </div>
+            <div class="field-group">
+                <label>MAL ID</label>
+                <input id="inp-mal" type="number" placeholder="e.g. 21" min="1">
             </div>
-        </div>
-
-        <div id="player-wrap">
-            <button id="toggle-bar-btn" onclick="toggleBar()" title="Toggle controls">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#aaa" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 8 11 13 6" />
-                </svg>
-            </button>
-
-            <div id="placeholder">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
-                </svg>
-                <p>Click &#8964; top-right to open controls</p>
-                <p class="hint">Enter MAL ID + Episode then press Play</p>
+            <div class="field-group">
+                <label>Episode</label>
+                <input id="inp-ep" type="number" placeholder="e.g. 1" min="1">
             </div>
 
-            <video id="videoPlayer" controls autoplay style="display:none;"></video>
-            <iframe id="player-iframe" allow="autoplay; fullscreen" allowfullscreen style="display:none;"></iframe>
+            <div id="lang-toggle">
+                <button id="btn-dub" class="active" onclick="setLang('dub')">DUB</button>
+                <button id="btn-sub" onclick="setLang('sub')">SUB</button>
+            </div>
 
-            <div id="autonext-overlay">
-                <div class="an-title">Up next</div>
-                <div class="an-ep" id="an-ep-label">Episode &#8212;</div>
-                <div id="an-bar-bg">
-                    <div id="an-bar"></div>
+            <div id="autonext-wrap">
+                <span>Auto-Next</span>
+                <label class="switch">
+                    <input type="checkbox" id="chk-autonext" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="ctrl-btns">
+                <button class="bar-btn" id="btn-prev-bar" onclick="goPrevEp()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    Prev
+                </button>
+                <button class="bar-btn" id="btn-go" onclick="loadPlayer()">&#9654; Play</button>
+                <button class="bar-btn" id="btn-next-bar" onclick="goNextEp()">
+                    Next
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div id="extract-spinner">
+                    <div class="spin"></div>
+                    <span>Extracting...</span>
                 </div>
-                <div class="an-btns">
-                    <button id="an-btn-now" onclick="goNextNow()">Play Now</button>
-                    <button id="an-btn-cancel" onclick="cancelAutoNext()">Cancel</button>
+                <div id="prefetch-status">
+                    <span id="prefetch-icon">✓</span>
+                    <span id="prefetch-status-text">+50 Ep Ready</span>
+                </div>
+            </div>
+
+            <div id="srv-wrap">
+                <button id="srv-toggle-btn" onclick="toggleServerPanel()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="4" rx="1"/>
+                        <rect x="2" y="10" width="20" height="4" rx="1"/>
+                        <rect x="2" y="17" width="20" height="4" rx="1"/>
+                    </svg>
+                    Servers
+                </button>
+                <div id="server-panel">
+                    <div class="sp-row">
+                        <span class="sp-title">Servers &amp; Quality</span>
+                        <button id="sp-close" onclick="toggleServerPanel()">&#10005;</button>
+                    </div>
+                    <div id="quality-row"></div>
+                    <div id="sp-loading" style="display:none"><div class="spin"></div> Fetching streams&#8230;</div>
+                    <div id="sp-error" style="display:none"></div>
+                    <div id="server-list"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const BASE_DATASET_URL = "https://raw.githubusercontent.com/srtfile/hi_anime_streams_scraper/refs/heads/main/";
-        const DATASET_FILENAMES = ["hianime_streams_list.json"].concat(
-            Array.from({ length: 36 }, (_, i) => `hianime_streams_list_${i + 2}.json`)
-        );
+    <!-- ── PLAYER ── -->
+    <div id="player-wrap">
 
-        let datasetCache = null;
-        let hlsInstance = null;
-        let currentLang = 'dub';
-        let autoNextTimer = null;
-        let activeServerStream = null;
-        let allExtractedStreams = [];
-        let cachedMalId = null;
-        let cachedEp = null;
-        let _fetchToken = 0;
-        const COUNTDOWN_S = 10;
+        <!-- Floating FAB: Direct Stream -->
+        <button id="direct-play-fab" onclick="openDirectModal()" title="Play any HLS / M3U8 stream directly">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Direct Stream
+        </button>
 
-        const streamCache = new Map();
-        let preFetchAbortToken = 0;
+        <!-- Topbar toggle -->
+        <button id="toggle-bar-btn" onclick="toggleBar()" title="Toggle controls">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 8 11 13 6"/></svg>
+        </button>
 
-        function getProxyUrl(url) {
-            if (!url) return '';
-            if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
-            const cleanUrl = url.split('?')[0].toLowerCase();
-            if (cleanUrl.endsWith('.txt')) {
-                return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://otakuvid.online/`;
+        <div id="placeholder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <circle cx="12" cy="12" r="10"/>
+                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+            </svg>
+            <p>Click &#8964; top-right to open controls</p>
+            <p class="hint">Enter MAL ID + Episode — or click <strong style="color:#a78bfa">Direct Stream</strong> to play any M3U8 / HLS URL</p>
+        </div>
+
+        <video id="videoPlayer" controls autoplay style="display:none;"></video>
+        <iframe id="player-iframe" allow="autoplay; fullscreen" allowfullscreen style="display:none;"></iframe>
+
+        <div id="autonext-overlay">
+            <div class="an-title">Up next</div>
+            <div class="an-ep" id="an-ep-label">Episode &#8212;</div>
+            <div id="an-bar-bg"><div id="an-bar"></div></div>
+            <div class="an-btns">
+                <button id="an-btn-now" onclick="goNextNow()">Play Now</button>
+                <button id="an-btn-cancel" onclick="cancelAutoNext()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     DIRECT STREAM MODAL
+════════════════════════════════════════════════════ -->
+<div id="direct-modal-overlay" onclick="overlayClickClose(event)">
+    <div id="direct-modal">
+
+        <div class="dm-header">
+            <div class="dm-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Direct Stream Player
+            </div>
+            <button id="dm-close" onclick="closeDirectModal()">&#10005;</button>
+        </div>
+
+        <!-- Currently playing banner -->
+        <div id="dm-now-playing">
+            <div id="dm-now-playing-label">▶ Now Playing</div>
+            <div id="dm-now-playing-url"></div>
+        </div>
+
+        <!-- Stream URL -->
+        <div class="dm-section">
+            <div class="dm-label">
+                Stream URL
+                <span class="dm-label-badge">HLS · M3U8 · MP4 · any</span>
+            </div>
+            <div class="dm-url-row">
+                <input id="dm-url-inp" type="text" placeholder="https://example.com/stream.m3u8 — paste or auto-detected from clipboard" autocomplete="off" spellcheck="false">
+                <button id="dm-btn-paste" onclick="pasteFromClipboard()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                    Paste
+                </button>
+            </div>
+            <div id="proxy-status-row">
+                <div id="proxy-status-dot"></div>
+                <span id="proxy-status-text">Enter a stream URL to begin</span>
+            </div>
+        </div>
+
+        <!-- Proxy config -->
+        <div class="dm-section">
+            <div class="dm-label" style="justify-content:space-between">
+                <span>Proxy</span>
+                <button id="dm-proxy-toggle" onclick="toggleProxyMode()" title="Enable / disable CORS proxy wrap">OFF</button>
+            </div>
+            <div class="dm-proxy-row">
+                <input id="dm-proxy-inp" type="text" placeholder="Proxy base URL — e.g. https://anivexa.onrender.com/proxy?url=" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="dm-presets">
+                <button class="dm-preset-btn" onclick="setProxyPreset('anivexa')">Anivexa</button>
+                <button class="dm-preset-btn" onclick="setProxyPreset('allorigins')">AllOrigins</button>
+                <button class="dm-preset-btn" onclick="setProxyPreset('corsproxy')">CORSProxy.io</button>
+                <button class="dm-preset-btn" onclick="setProxyPreset('codetabs')">Codetabs</button>
+                <button class="dm-preset-btn" onclick="setProxyPreset('custom')">Custom…</button>
+            </div>
+        </div>
+
+        <hr class="dm-divider">
+
+        <!-- Advanced: origin / referer / headers -->
+        <div class="dm-section">
+            <button class="dm-collapse-btn" id="adv-toggle" onclick="toggleAdvanced()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                Advanced — Origin, Referer &amp; Custom Headers
+            </button>
+            <div class="dm-collapsible" id="adv-section">
+                <div style="height:12px"></div>
+
+                <!-- Origin -->
+                <div class="dm-label" style="margin-bottom:6px">Origin</div>
+                <input id="dm-origin-inp" type="text" placeholder="https://your-site.com (sent as Origin header)" autocomplete="off" spellcheck="false">
+                <div style="height:10px"></div>
+
+                <!-- Referer -->
+                <div class="dm-label" style="margin-bottom:6px">Referer</div>
+                <input id="dm-referer-inp" type="text" placeholder="https://your-site.com/page (sent as Referer header)" autocomplete="off" spellcheck="false">
+                <div style="height:10px"></div>
+
+                <!-- Custom Headers -->
+                <div class="dm-label" style="margin-bottom:6px">Custom Headers</div>
+                <div class="dm-headers-list" id="dm-headers-list"></div>
+                <button id="dm-add-header" onclick="addHeaderRow()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Header
+                </button>
+            </div>
+        </div>
+
+        <div id="dm-error"></div>
+        <button id="dm-play-btn" onclick="directPlay()">
+            <div class="spin-sm"></div>
+            <svg class="play-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Play Stream
+        </button>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   CONSTANTS & STATE
+───────────────────────────────────────────── */
+const BASE_DATASET_URL  = "https://raw.githubusercontent.com/srtfile/hi_anime_streams_scraper/refs/heads/main/";
+const DATASET_FILENAMES = ["hianime_streams_list.json"].concat(
+    Array.from({length:36},(_,i)=>`hianime_streams_list_${i+2}.json`)
+);
+
+const PROXY_PRESETS = {
+    anivexa:   'https://anivexa.onrender.com/proxy?url=',
+    allorigins:'https://api.allorigins.win/raw?url=',
+    corsproxy: 'https://corsproxy.io/?',
+    codetabs:  'https://api.codetabs.com/v1/proxy?quest=',
+};
+
+let datasetCache     = null;
+let hlsInstance      = null;
+let currentLang      = 'dub';
+let autoNextTimer    = null;
+let activeServerStream = null;
+let allExtractedStreams = [];
+let cachedMalId      = null;
+let cachedEp         = null;
+let _fetchToken      = 0;
+const COUNTDOWN_S    = 10;
+
+const streamCache    = new Map();
+let preFetchAbortToken = 0;
+
+// Direct player state
+let dmProxyEnabled   = false;
+let dmCurrentUrl     = ''; // what is actually playing right now via direct mode
+let dmUrlChangeTimer = null;
+
+/* ─────────────────────────────────────────────
+   PROXY UTILS
+───────────────────────────────────────────── */
+function getProxyUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    if (cleanUrl.endsWith('.txt')) {
+        return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://otakuvid.online/`;
+    }
+    return url;
+}
+
+function buildProxiedUrl(rawUrl, proxyBase) {
+    if (!rawUrl) return '';
+    if (!proxyBase) return rawUrl;
+    // If proxyBase ends with '=' or '?' we can just append
+    return proxyBase + encodeURIComponent(rawUrl);
+}
+
+/* ─────────────────────────────────────────────
+   DATASET / SEARCH
+───────────────────────────────────────────── */
+async function loadAllDatasets() {
+    if (datasetCache) return datasetCache;
+    const promises = DATASET_FILENAMES.map(fname =>
+        fetch(BASE_DATASET_URL+fname).then(r=>r.ok?r.json():[]).catch(()=>[])
+    );
+    const results = await Promise.all(promises);
+    datasetCache  = results.flat();
+    return datasetCache;
+}
+
+async function searchOtakuVid(malId, epNum) {
+    const datasets   = await loadAllDatasets();
+    const targetMid  = String(malId).trim();
+    const targetEp   = String(epNum).trim();
+    return datasets.find(item => {
+        const mid = String(item["mal_id/anilist_id/tmdb_id"]||item.mal_id||'').trim();
+        const ep  = String(item["episode_no"]||item.ep||'').trim();
+        return mid===targetMid && ep===targetEp;
+    });
+}
+
+/* ─────────────────────────────────────────────
+   PROXY-FETCH HELPERS
+───────────────────────────────────────────── */
+async function fetchHtmlWithProxy(url) {
+    const proxyUrls = [];
+    if (window.location.origin && window.location.protocol.startsWith('http') && !window.location.origin.includes('github.io')) {
+        proxyUrls.push(window.location.origin+`/proxy?url=${encodeURIComponent(url)}`);
+    }
+    proxyUrls.push(
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+    );
+    for (const pUrl of proxyUrls) {
+        try {
+            const res = await fetch(pUrl);
+            if (res.ok) {
+                const text = await res.text();
+                if (text && text.length>50) return text;
             }
-            return url;
-        }
+        } catch(e){}
+    }
+    throw new Error("Could not fetch page content via proxies");
+}
 
-        async function loadAllDatasets() {
-            if (datasetCache) return datasetCache;
-            try {
-                const promises = DATASET_FILENAMES.map(fname =>
-                    fetch(BASE_DATASET_URL + fname)
-                        .then(r => r.ok ? r.json() : [])
-                        .catch(() => [])
-                );
-                const results = await Promise.all(promises);
-                datasetCache = results.flat();
-                return datasetCache;
-            } catch (err) {
-                throw new Error("Failed to load OtakuVid datasets: " + err.message);
-            }
-        }
+function unpackPackedJS(html) {
+    const match = html.match(/eval\(function\(p,a,c,k,e,d\).*?'(.*?)',(\d+),(\d+),'(.*?)'\.split\('\|'\)\)\)/s);
+    if (!match) return "";
+    let payload = match[1];
+    const base  = parseInt(match[2],10);
+    const count = parseInt(match[3],10);
+    const words = match[4].split("|");
+    function unbase(n,b){const c="0123456789abcdefghijklmnopqrstuvwxyz";let r="";while(n>0){r=c[n%b]+r;n=Math.floor(n/b);}return r||"0";}
+    for (let i=count-1;i>=0;i--){if(words[i]){const t=unbase(i,base);const g=new RegExp('\\b'+t+'\\b','g');payload=payload.replace(g,words[i]);}}
+    return payload;
+}
 
-        async function searchOtakuVid(malId, epNum) {
-            const datasets = await loadAllDatasets();
-            const targetMid = String(malId).trim();
-            const targetEp = String(epNum).trim();
-
-            return datasets.find(item => {
-                const mid = String(item["mal_id/anilist_id/tmdb_id"] || item.mal_id || '').trim();
-                const ep = String(item["episode_no"] || item.ep || '').trim();
-                return mid === targetMid && ep === targetEp;
-            });
-        }
-
-        async function fetchHtmlWithProxy(url) {
-            const proxyUrls = [];
-            if (window.location.origin && window.location.protocol.startsWith('http') && !window.location.origin.includes('github.io')) {
-                proxyUrls.push(window.location.origin + `/proxy?url=${encodeURIComponent(url)}`);
-            }
-            proxyUrls.push(
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-            );
-
-            for (const pUrl of proxyUrls) {
-                try {
-                    const res = await fetch(pUrl);
-                    if (res.ok) {
-                        const text = await res.text();
-                        if (text && text.length > 50) return text;
+async function parseMasterPlaylist(masterUrl) {
+    try {
+        const proxied = getProxyUrl(masterUrl);
+        const res     = await fetch(proxied);
+        if (!res.ok) return [];
+        const content = await res.text();
+        const base    = masterUrl.substring(0,masterUrl.lastIndexOf("/")+1);
+        const variants= [];
+        const lines   = content.split(/\r?\n/);
+        for (let i=0;i<lines.length;i++) {
+            const line = lines[i].trim();
+            if (line.startsWith("#EXT-X-STREAM-INF:")) {
+                const resM = line.match(/RESOLUTION=(\d+x\d+)/i);
+                const bwM  = line.match(/BANDWIDTH=(\d+)/i);
+                const resolution = resM?resM[1]:"HD";
+                let qLabel = "HD";
+                if(resolution.includes("1920")||resolution.includes("1080")) qLabel="1080p";
+                else if(resolution.includes("1280")||resolution.includes("720")) qLabel="720p";
+                else if(resolution.includes("854")||resolution.includes("480"))  qLabel="480p";
+                else if(resolution.includes("640")||resolution.includes("360"))  qLabel="360p";
+                if (i+1<lines.length) {
+                    const sp = lines[i+1].trim();
+                    if (sp&&!sp.startsWith("#")) {
+                        const abs = sp.startsWith("http")?sp:base+sp;
+                        variants.push({quality:qLabel,resolution,bandwidth:bwM?bwM[1]:"0",url:abs});
                     }
-                } catch (e) { }
-            }
-            throw new Error("Could not fetch page content via proxies");
-        }
-
-        function unpackPackedJS(html) {
-            const match = html.match(/eval\(function\(p,a,c,k,e,d\).*?'(.*?)',(\d+),(\d+),'(.*?)'\.split\('\|'\)\)\)/s);
-            if (!match) return "";
-            let payload = match[1];
-            const base = parseInt(match[2], 10);
-            const count = parseInt(match[3], 10);
-            const words = match[4].split("|");
-
-            function unbase(n, b) {
-                const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
-                let res = "";
-                while (n > 0) {
-                    res = chars[n % b] + res;
-                    n = Math.floor(n / b);
-                }
-                return res || "0";
-            }
-
-            for (let i = count - 1; i >= 0; i--) {
-                if (words[i]) {
-                    const token = unbase(i, base);
-                    const reg = new RegExp('\\b' + token + '\\b', 'g');
-                    payload = payload.replace(reg, words[i]);
-                }
-            }
-            return payload;
-        }
-
-        async function parseMasterPlaylist(masterUrl, pageUrl) {
-            try {
-                const proxiedMaster = getProxyUrl(masterUrl);
-                const res = await fetch(proxiedMaster);
-                if (!res.ok) return [];
-                const content = await res.text();
-
-                const base = masterUrl.substring(0, masterUrl.lastIndexOf("/") + 1);
-                const variants = [];
-                const lines = content.split(/\r?\n/);
-
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (line.startsWith("#EXT-X-STREAM-INF:")) {
-                        const resMatch = line.match(/RESOLUTION=(\d+x\d+)/i);
-                        const bwMatch = line.match(/BANDWIDTH=(\d+)/i);
-                        const resolution = resMatch ? resMatch[1] : "HD";
-                        const bandwidth = bwMatch ? bwMatch[1] : "0";
-
-                        let qLabel = "HD";
-                        if (resolution.includes("1920") || resolution.includes("1080")) qLabel = "1080p";
-                        else if (resolution.includes("1280") || resolution.includes("720")) qLabel = "720p";
-                        else if (resolution.includes("854") || resolution.includes("480")) qLabel = "480p";
-                        else if (resolution.includes("640") || resolution.includes("360")) qLabel = "360p";
-
-                        if (i + 1 < lines.length) {
-                            const streamPath = lines[i + 1].trim();
-                            if (streamPath && !streamPath.startsWith("#")) {
-                                const absStream = streamPath.startsWith("http") ? streamPath : base + streamPath;
-                                variants.push({
-                                    quality: qLabel,
-                                    resolution: resolution,
-                                    bandwidth: bandwidth,
-                                    url: absStream
-                                });
-                            }
-                        }
-                    }
-                }
-                return variants;
-            } catch (e) {
-                return [];
-            }
-        }
-
-        async function extractOtakuVidStreams(embedUrl) {
-            try {
-                const html = await fetchHtmlWithProxy(embedUrl);
-                const decodedJs = unpackPackedJS(html);
-
-                let masterUrl = null;
-                const m3u8Match = (decodedJs + html).match(/https?:\/\/[^\s"'<>]+?\.(?:m3u8|txt)[^\s"'<>]*/i);
-                if (m3u8Match) {
-                    masterUrl = m3u8Match[0];
-                }
-
-                const variants = masterUrl ? await parseMasterPlaylist(masterUrl, embedUrl) : [];
-                return { masterUrl, variants, rawHtml: html };
-            } catch (e) {
-                return { masterUrl: null, variants: [], error: e.message };
-            }
-        }
-
-        async function getOtakuVidStreams(malId, epNum) {
-            const cacheKey = `${malId}_${epNum}`;
-            if (streamCache.has(cacheKey)) {
-                return await streamCache.get(cacheKey);
-            }
-
-            const fetchPromise = (async () => {
-                const matchedEntry = await searchOtakuVid(malId, epNum);
-                if (!matchedEntry) throw new Error(`MAL ID ${malId} Episode ${epNum} not found in OtakuVid datasets`);
-
-                const title = matchedEntry.anime_name || matchedEntry.title || `Anime ${malId}`;
-                const streams = [];
-
-                const embedEntries = [];
-                Object.keys(matchedEntry).forEach(k => {
-                    const v = matchedEntry[k];
-                    if (typeof v === 'string') {
-                        const kLower = String(k).toLowerCase();
-                        const vLower = v.toLowerCase();
-                        if (vLower.includes("otakuvid.online") || vLower.includes("earnvids") || vLower.includes("oktavid") || kLower.includes("otakuvid") || kLower.includes("oktavid") || kLower.includes("earnvids")) {
-                            const isDub = kLower.includes("dub");
-                            embedEntries.push({ key: k, url: v, lang: isDub ? "dub" : "sub" });
-                        }
-                    }
-                });
-
-                if (embedEntries.length === 0) {
-                    Object.keys(matchedEntry).forEach(k => {
-                        const v = matchedEntry[k];
-                        if (typeof v === 'string' && v.startsWith("http")) {
-                            const isDub = String(k).toLowerCase().includes("dub");
-                            embedEntries.push({ key: k, url: v, lang: isDub ? "dub" : "sub" });
-                        }
-                    });
-                }
-
-                for (const emb of embedEntries) {
-                    try {
-                        const extracted = await extractOtakuVidStreams(emb.url);
-                        if (extracted.variants && extracted.variants.length > 0) {
-                            extracted.variants.forEach(varItem => {
-                                streams.push({
-                                    server: `OtakuVid ${emb.lang.toUpperCase()} (${varItem.quality})`,
-                                    url: varItem.url,
-                                    type: "mp4",
-                                    quality: varItem.quality,
-                                    lang: emb.lang,
-                                    embed_url: emb.url
-                                });
-                            });
-                        } else if (extracted.masterUrl) {
-                            streams.push({
-                                server: `OtakuVid ${emb.lang.toUpperCase()} (HD)`,
-                                url: extracted.masterUrl,
-                                type: "mp4",
-                                quality: "HD",
-                                lang: emb.lang,
-                                embed_url: emb.url
-                            });
-                        } else {
-                            streams.push({
-                                server: `OtakuVid ${emb.lang.toUpperCase()} (Embed)`,
-                                url: emb.url,
-                                type: "iframe",
-                                quality: "Embed",
-                                lang: emb.lang
-                            });
-                        }
-                    } catch (e) {
-                        streams.push({
-                            server: `OtakuVid ${emb.lang.toUpperCase()} (Embed)`,
-                            url: emb.url,
-                            type: "iframe",
-                            quality: "Embed",
-                            lang: emb.lang
-                        });
-                    }
-                }
-
-                return {
-                    status: "success",
-                    server: "OtakuVid",
-                    malId: parseInt(malId),
-                    episode: parseInt(epNum),
-                    animeTitle: title,
-                    results: {
-                        stream_url: streams.length > 0 ? streams[0].url : null,
-                        streams: streams
-                    }
-                };
-            })();
-
-            streamCache.set(cacheKey, fetchPromise);
-            return await fetchPromise;
-        }
-
-        async function preExtractNextEpisodes(malId, currentEpNum, totalToFetch = 50) {
-            const myPrefetchToken = ++preFetchAbortToken;
-            const startEp = parseInt(currentEpNum, 10) + 1;
-            const statusEl = document.getElementById('prefetch-status');
-            const statusIcon = document.getElementById('prefetch-icon');
-            const statusText = document.getElementById('prefetch-status-text');
-
-            const endEp = startEp + totalToFetch - 1;
-            const targetCount = totalToFetch;
-
-            if (statusEl && statusText) {
-                statusEl.style.display = 'flex';
-                statusEl.style.color = '#a78bfa';
-                statusEl.style.background = 'rgba(167, 139, 250, 0.12)';
-                statusEl.style.borderColor = 'rgba(167, 139, 250, 0.25)';
-                if (statusIcon) statusIcon.textContent = '⚡';
-                statusText.textContent = `Pre-extracting +${targetCount} Ep...`;
-            }
-
-            let fetchedCount = 0;
-            for (let ep = startEp; ep <= endEp; ep++) {
-                if (myPrefetchToken !== preFetchAbortToken) return;
-
-                const cacheKey = `${malId}_${ep}`;
-                if (!streamCache.has(cacheKey)) {
-                    try {
-                        await getOtakuVidStreams(malId, ep);
-                        if (myPrefetchToken !== preFetchAbortToken) return;
-                    } catch (e) {
-                        // Silently handle background prefetch errors
-                    }
-                    await new Promise(r => setTimeout(r, 350));
-                }
-                fetchedCount++;
-                if (statusText && myPrefetchToken === preFetchAbortToken) {
-                    statusText.textContent = `Pre-extracting (${fetchedCount}/${targetCount})...`;
-                }
-            }
-
-            if (myPrefetchToken === preFetchAbortToken && statusEl && statusText) {
-                statusEl.style.display = 'flex';
-                statusEl.style.color = '#4ade80';
-                statusEl.style.background = 'rgba(74, 222, 128, 0.12)';
-                statusEl.style.borderColor = 'rgba(74, 222, 128, 0.25)';
-                if (statusIcon) statusIcon.textContent = '✓';
-                statusText.textContent = `+${targetCount} Ep Ready`;
-            }
-        }
-
-        function toggleBar() {
-            const inner = document.getElementById('topbar-inner');
-            const btn = document.getElementById('toggle-bar-btn');
-            btn.classList.toggle('open', inner.classList.toggle('open'));
-        }
-
-        function toggleServerPanel() {
-            const panel = document.getElementById('server-panel');
-            const btn = document.getElementById('srv-toggle-btn');
-            btn.classList.toggle('open', panel.classList.toggle('visible'));
-        }
-
-        function setLang(lang) {
-            currentLang = lang;
-            document.getElementById('btn-dub').classList.toggle('active', lang === 'dub');
-            document.getElementById('btn-sub').classList.toggle('active', lang === 'sub');
-
-            const malId = String(document.getElementById('inp-mal').value).trim();
-            const ep = String(document.getElementById('inp-ep').value).trim();
-
-            if (allExtractedStreams && allExtractedStreams.length > 0 && cachedMalId === malId && cachedEp === ep) {
-                const best = getBestHdStream(allExtractedStreams, lang);
-                if (best) {
-                    playStream(best);
-                    renderServerPanel(allExtractedStreams);
-                } else {
-                    showPlayer(malId, ep, lang);
-                }
-            } else if (malId && ep) {
-                showPlayer(malId, ep, lang);
-            }
-        }
-
-        function playStream(stream) {
-            activeServerStream = stream;
-            const placeholder = document.getElementById('placeholder');
-            const video = document.getElementById('videoPlayer');
-            const iframe = document.getElementById('player-iframe');
-
-            placeholder.style.display = 'none';
-
-            if (!stream) return;
-
-            if (stream.type === 'iframe') {
-                video.style.display = 'none';
-                video.pause();
-                iframe.src = stream.url;
-                iframe.style.display = 'block';
-                return;
-            }
-
-            iframe.style.display = 'none';
-            iframe.src = 'about:blank';
-            video.style.display = 'block';
-
-            const proxiedUrl = getProxyUrl(stream.url);
-
-            if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-
-            if (proxiedUrl.includes('.m3u8') || proxiedUrl.includes('.txt') || (stream.url && stream.url.includes('.txt'))) {
-                if (Hls.isSupported()) {
-                    hlsInstance = new Hls();
-                    hlsInstance.loadSource(proxiedUrl);
-                    hlsInstance.attachMedia(video);
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        video.play().catch(() => { video.muted = true; video.play(); });
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = proxiedUrl;
-                    video.play().catch(() => { video.muted = true; video.play(); });
-                }
-            } else {
-                video.src = proxiedUrl;
-                video.play().catch(() => { video.muted = true; video.play(); });
-            }
-
-            video.onended = () => {
-                const malId = document.getElementById('inp-mal').value.trim();
-                const ep = document.getElementById('inp-ep').value.trim();
-                if (malId && ep) triggerAutoNext(malId, ep, currentLang);
-            };
-        }
-
-        function renderServerPanel(streams) {
-            const qRow = document.getElementById('quality-row');
-            const srvList = document.getElementById('server-list');
-            const spLoad = document.getElementById('sp-loading');
-            const spErr = document.getElementById('sp-error');
-            const srvBtn = document.getElementById('srv-toggle-btn');
-
-            spLoad.style.display = 'none';
-            spErr.style.display = 'none';
-            qRow.innerHTML = '';
-            srvList.innerHTML = '';
-
-            if (!streams || !streams.length) {
-                spErr.style.display = 'block';
-                spErr.textContent = 'No streams found for this episode.';
-                if (srvBtn) {
-                    srvBtn.innerHTML = `
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="3" width="20" height="4" rx="1" />
-                            <rect x="2" y="10" width="20" height="4" rx="1" />
-                            <rect x="2" y="17" width="20" height="4" rx="1" />
-                        </svg>
-                        Servers
-                    `;
-                }
-                return;
-            }
-
-            const qualSet = new Set(["1080p", "720p", "480p", "360p"]);
-            streams.forEach(s => { if (s.quality && s.quality !== 'Embed') qualSet.add(s.quality); });
-
-            Array.from(qualSet).forEach(q => {
-                let matchingStream = streams.find(s => s.lang === currentLang && ((s.quality || '').includes(q) || (s.server || '').includes(q)));
-                if (!matchingStream) {
-                    matchingStream = streams.find(s => (s.quality || '').includes(q) || (s.server || '').includes(q));
-                }
-
-                const pill = document.createElement('button');
-                const isActive = (matchingStream && activeServerStream === matchingStream);
-                pill.className = 'q-pill' + (isActive ? ' active' : '') + (matchingStream ? '' : ' unavail');
-                pill.textContent = q;
-                if (matchingStream) {
-                    pill.onclick = () => {
-                        document.querySelectorAll('.q-pill').forEach(p => p.classList.remove('active'));
-                        pill.classList.add('active');
-                        playStream(matchingStream);
-                        if (matchingStream.lang) {
-                            currentLang = matchingStream.lang;
-                            document.getElementById('btn-dub').classList.toggle('active', currentLang === 'dub');
-                            document.getElementById('btn-sub').classList.toggle('active', currentLang === 'sub');
-                        }
-                        renderServerPanel(allExtractedStreams);
-                    };
-                }
-                qRow.appendChild(pill);
-            });
-
-            const sortedStreams = [...streams].sort((a, b) => {
-                if (a.lang === currentLang && b.lang !== currentLang) return -1;
-                if (a.lang !== currentLang && b.lang === currentLang) return 1;
-                return 0;
-            });
-
-            sortedStreams.forEach((st, idx) => {
-                const btn = document.createElement('button');
-                const isCurrentActive = (activeServerStream === st || (!activeServerStream && idx === 0));
-                btn.className = 'srv-btn' + (isCurrentActive ? ' active' : '');
-
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = st.server || `OtakuVid Server ${idx + 1}`;
-                btn.appendChild(nameSpan);
-
-                const badgeText = (st.quality || '') + (st.lang ? ` ${st.lang.toUpperCase()}` : '');
-                if (badgeText.trim()) {
-                    const badge = document.createElement('span');
-                    badge.className = 'srv-badge';
-                    badge.textContent = badgeText.trim();
-                    btn.appendChild(badge);
-                }
-
-                btn.onclick = () => {
-                    document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    playStream(st);
-                    if (st.lang) {
-                        currentLang = st.lang;
-                        document.getElementById('btn-dub').classList.toggle('active', currentLang === 'dub');
-                        document.getElementById('btn-sub').classList.toggle('active', currentLang === 'sub');
-                    }
-                    renderServerPanel(allExtractedStreams);
-                };
-
-                srvList.appendChild(btn);
-            });
-
-            if (srvBtn) {
-                const activeRes = activeServerStream ? `${activeServerStream.quality} ${activeServerStream.lang ? activeServerStream.lang.toUpperCase() : ''}` : '';
-                srvBtn.innerHTML = `
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="3" width="20" height="4" rx="1" />
-                        <rect x="2" y="10" width="20" height="4" rx="1" />
-                        <rect x="2" y="17" width="20" height="4" rx="1" />
-                    </svg>
-                    Servers (${activeRes.trim() ? activeRes.trim() : streams.length + ' Streams'})
-                `;
-            }
-        }
-
-        function getBestHdStream(streams, preferredLang = 'dub') {
-            if (!streams || streams.length === 0) return null;
-            const priority = ["1080p", "720p", "480p", "360p"];
-
-            const prefStreams = streams.filter(s => s.lang === preferredLang);
-            if (prefStreams.length > 0) {
-                for (const res of priority) {
-                    const found = prefStreams.find(s => (s.quality || s.server || '').includes(res));
-                    if (found) return found;
-                }
-                return prefStreams[0];
-            }
-
-            const altLang = preferredLang === 'dub' ? 'sub' : 'dub';
-            const altStreams = streams.filter(s => s.lang === altLang);
-            if (altStreams.length > 0) {
-                for (const res of priority) {
-                    const found = altStreams.find(s => (s.quality || s.server || '').includes(res));
-                    if (found) return found;
-                }
-                return altStreams[0];
-            }
-
-            for (const res of priority) {
-                const found = streams.find(s => (s.quality || s.server || '').includes(res));
-                if (found) return found;
-            }
-            return streams[0];
-        }
-
-        async function showPlayer(malId, ep, lang = 'dub') {
-            cancelAutoNext();
-            currentLang = lang;
-            const myToken = ++_fetchToken;
-
-            document.getElementById('inp-mal').value = malId;
-            document.getElementById('inp-ep').value = ep;
-            document.getElementById('btn-dub').classList.toggle('active', lang === 'dub');
-            document.getElementById('btn-sub').classList.toggle('active', lang === 'sub');
-
-            document.title = `OtakuVid · MAL ${malId} · Ep ${ep} · ${lang.toUpperCase()}`;
-
-            const spinner = document.getElementById('extract-spinner');
-            const prefetchStatus = document.getElementById('prefetch-status');
-            if (spinner) spinner.style.display = 'flex';
-            if (prefetchStatus) prefetchStatus.style.display = 'none';
-
-            document.getElementById('srv-toggle-btn').classList.add('show');
-            document.getElementById('quality-row').innerHTML = '';
-            document.getElementById('server-list').innerHTML = '';
-            document.getElementById('sp-error').style.display = 'none';
-            document.getElementById('sp-loading').style.display = 'flex';
-
-            try {
-                const data = await getOtakuVidStreams(malId, ep);
-                if (myToken !== _fetchToken) return;
-
-                document.getElementById('sp-loading').style.display = 'none';
-
-                const streams = data.results.streams || [];
-                allExtractedStreams = streams;
-                cachedMalId = String(malId);
-                cachedEp = String(ep);
-
-                if (streams.length > 0) {
-                    const best = getBestHdStream(streams, lang);
-                    playStream(best);
-                    renderServerPanel(streams);
-
-                    preExtractNextEpisodes(malId, ep, 50);
-                } else {
-                    document.getElementById('sp-error').style.display = 'block';
-                    document.getElementById('sp-error').textContent = `No streams available for MAL ${malId} Ep ${ep}.`;
-                }
-            } catch (err) {
-                if (myToken !== _fetchToken) return;
-                document.getElementById('sp-loading').style.display = 'none';
-                document.getElementById('sp-error').style.display = 'block';
-                document.getElementById('sp-error').textContent = 'Error: ' + err.message;
-            } finally {
-                if (myToken === _fetchToken && spinner) {
-                    spinner.style.display = 'none';
                 }
             }
         }
+        return variants;
+    } catch(e) {return [];}
+}
 
-        function loadPlayer() {
-            const malId = document.getElementById('inp-mal').value.trim();
-            const ep = document.getElementById('inp-ep').value.trim();
-            if (!malId || !ep) { alert('Please enter both MAL ID and episode number.'); return; }
-            showPlayer(malId, ep, currentLang);
-        }
+async function extractOtakuVidStreams(embedUrl) {
+    try {
+        const html      = await fetchHtmlWithProxy(embedUrl);
+        const decodedJs = unpackPackedJS(html);
+        let masterUrl   = null;
+        const m3u8Match = (decodedJs+html).match(/https?:\/\/[^\s"'<>]+?\.(?:m3u8|txt)[^\s"'<>]*/i);
+        if (m3u8Match) masterUrl = m3u8Match[0];
+        const variants  = masterUrl ? await parseMasterPlaylist(masterUrl) : [];
+        return {masterUrl,variants,rawHtml:html};
+    } catch(e) {
+        return {masterUrl:null,variants:[],error:e.message};
+    }
+}
 
-        function goPrevEp() {
-            const malId = document.getElementById('inp-mal').value.trim();
-            const ep = parseInt(document.getElementById('inp-ep').value.trim(), 10);
-            if (!malId || isNaN(ep) || ep <= 1) return;
-            showPlayer(malId, ep - 1, currentLang);
-        }
-
-        function goNextEp() {
-            const malId = document.getElementById('inp-mal').value.trim();
-            const ep = parseInt(document.getElementById('inp-ep').value.trim(), 10);
-            if (!malId || isNaN(ep)) return;
-            showPlayer(malId, ep + 1, currentLang);
-        }
-
-        function triggerAutoNext(malId, ep, lang) {
-            if (!document.getElementById('chk-autonext').checked) return;
-            const nextEp = parseInt(ep, 10) + 1;
-            document.getElementById('an-ep-label').textContent = `Episode ${nextEp}`;
-            const overlay = document.getElementById('autonext-overlay');
-            const bar = document.getElementById('an-bar');
-            overlay.style.display = 'block';
-            bar.style.transition = 'none';
-            bar.style.transform = 'scaleX(1)';
-            bar.getBoundingClientRect();
-            bar.style.transition = `transform ${COUNTDOWN_S}s linear`;
-            bar.style.transform = 'scaleX(0)';
-            let remaining = COUNTDOWN_S;
-            autoNextTimer = setInterval(() => { if (--remaining <= 0) goNextNow(); }, 1000);
-        }
-
-        function goNextNow() {
-            cancelAutoNext();
-            const malId = document.getElementById('inp-mal').value.trim();
-            const ep = parseInt(document.getElementById('inp-ep').value.trim(), 10);
-            if (!malId || isNaN(ep)) return;
-            showPlayer(malId, ep + 1, currentLang);
-        }
-
-        function cancelAutoNext() {
-            clearInterval(autoNextTimer);
-            autoNextTimer = null;
-            const overlay = document.getElementById('autonext-overlay');
-            if (overlay) overlay.style.display = 'none';
-        }
-
-        function parseParamsFromUrl() {
-            const path = window.location.pathname;
-            const search = window.location.search;
-            const hash = window.location.hash;
-
-            const pathMatch = path.match(/\/(\d+)\/(\d+)(?:\/(dub|sub))?\/?$/i);
-            if (pathMatch) {
-                return { malId: pathMatch[1], epNum: pathMatch[2], lang: pathMatch[3] || 'dub' };
-            }
-
-            const queryDirectMatch = search.match(/\?(\d+)[\/&](\d+)(?:[\/&](dub|sub))?/i);
-            if (queryDirectMatch) {
-                return { malId: queryDirectMatch[1], epNum: queryDirectMatch[2], lang: queryDirectMatch[3] || 'dub' };
-            }
-
-            const searchParams = new URLSearchParams(search);
-            const qMal = searchParams.get('mal_id') || searchParams.get('malId') || searchParams.get('id');
-            const qEp = searchParams.get('ep') || searchParams.get('ep_num') || searchParams.get('episode');
-            const qLang = searchParams.get('lang') || searchParams.get('type');
-            if (qMal && qEp) {
-                return { malId: qMal, epNum: qEp, lang: qLang || 'dub' };
-            }
-
-            const hashMatch = hash.match(/#\/?(\d+)[\/&](\d+)(?:[\/&](dub|sub))?/i);
-            if (hashMatch) {
-                return { malId: hashMatch[1], epNum: hashMatch[2], lang: hashMatch[3] || 'dub' };
-            }
-
-            return null;
-        }
-
-        window.OtakuVidAPI = {
-            getStreams: getOtakuVidStreams,
-            search: searchOtakuVid,
-            loadDatasets: loadAllDatasets,
-            getProxyUrl: getProxyUrl
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const params = parseParamsFromUrl();
-            if (params) {
-                showPlayer(params.malId, params.epNum, params.lang);
+async function getOtakuVidStreams(malId,epNum) {
+    const cacheKey = `${malId}_${epNum}`;
+    if (streamCache.has(cacheKey)) return await streamCache.get(cacheKey);
+    const fetchPromise = (async()=>{
+        const matchedEntry = await searchOtakuVid(malId,epNum);
+        if (!matchedEntry) throw new Error(`MAL ID ${malId} Episode ${epNum} not found in OtakuVid datasets`);
+        const title   = matchedEntry.anime_name||matchedEntry.title||`Anime ${malId}`;
+        const streams = [];
+        const embedEntries = [];
+        Object.keys(matchedEntry).forEach(k=>{
+            const v=matchedEntry[k];
+            if(typeof v==='string'){
+                const kL=String(k).toLowerCase(),vL=v.toLowerCase();
+                if(vL.includes("otakuvid.online")||vL.includes("earnvids")||vL.includes("oktavid")||kL.includes("otakuvid")||kL.includes("oktavid")||kL.includes("earnvids")){
+                    embedEntries.push({key:k,url:v,lang:kL.includes("dub")?"dub":"sub"});
+                }
             }
         });
-    </script>
-</body>
+        if(embedEntries.length===0){
+            Object.keys(matchedEntry).forEach(k=>{
+                const v=matchedEntry[k];
+                if(typeof v==='string'&&v.startsWith("http")){
+                    embedEntries.push({key:k,url:v,lang:String(k).toLowerCase().includes("dub")?"dub":"sub"});
+                }
+            });
+        }
+        for(const emb of embedEntries){
+            try{
+                const extracted=await extractOtakuVidStreams(emb.url);
+                if(extracted.variants&&extracted.variants.length>0){
+                    extracted.variants.forEach(v=>{
+                        streams.push({server:`OtakuVid ${emb.lang.toUpperCase()} (${v.quality})`,url:v.url,type:"mp4",quality:v.quality,lang:emb.lang,embed_url:emb.url});
+                    });
+                } else if(extracted.masterUrl){
+                    streams.push({server:`OtakuVid ${emb.lang.toUpperCase()} (HD)`,url:extracted.masterUrl,type:"mp4",quality:"HD",lang:emb.lang,embed_url:emb.url});
+                } else {
+                    streams.push({server:`OtakuVid ${emb.lang.toUpperCase()} (Embed)`,url:emb.url,type:"iframe",quality:"Embed",lang:emb.lang});
+                }
+            } catch(e){
+                streams.push({server:`OtakuVid ${emb.lang.toUpperCase()} (Embed)`,url:emb.url,type:"iframe",quality:"Embed",lang:emb.lang});
+            }
+        }
+        return {status:"success",server:"OtakuVid",malId:parseInt(malId),episode:parseInt(epNum),animeTitle:title,results:{stream_url:streams.length>0?streams[0].url:null,streams}};
+    })();
+    streamCache.set(cacheKey,fetchPromise);
+    return await fetchPromise;
+}
 
+async function preExtractNextEpisodes(malId,currentEpNum,totalToFetch=50) {
+    const myPrefetchToken = ++preFetchAbortToken;
+    const startEp  = parseInt(currentEpNum,10)+1;
+    const statusEl = document.getElementById('prefetch-status');
+    const statusIcon=document.getElementById('prefetch-icon');
+    const statusText=document.getElementById('prefetch-status-text');
+    const endEp    = startEp+totalToFetch-1;
+    if(statusEl&&statusText){
+        statusEl.style.display='flex';statusEl.style.color='#a78bfa';
+        statusEl.style.background='rgba(167,139,250,0.12)';statusEl.style.borderColor='rgba(167,139,250,0.25)';
+        if(statusIcon) statusIcon.textContent='⚡';
+        statusText.textContent=`Pre-extracting +${totalToFetch} Ep...`;
+    }
+    let fetchedCount=0;
+    for(let ep=startEp;ep<=endEp;ep++){
+        if(myPrefetchToken!==preFetchAbortToken) return;
+        const cacheKey=`${malId}_${ep}`;
+        if(!streamCache.has(cacheKey)){
+            try{await getOtakuVidStreams(malId,ep);if(myPrefetchToken!==preFetchAbortToken)return;}catch(e){}
+            await new Promise(r=>setTimeout(r,350));
+        }
+        fetchedCount++;
+        if(statusText&&myPrefetchToken===preFetchAbortToken) statusText.textContent=`Pre-extracting (${fetchedCount}/${totalToFetch})...`;
+    }
+    if(myPrefetchToken===preFetchAbortToken&&statusEl&&statusText){
+        statusEl.style.color='#4ade80';statusEl.style.background='rgba(74,222,128,0.12)';statusEl.style.borderColor='rgba(74,222,128,0.25)';
+        if(statusIcon) statusIcon.textContent='✓';
+        statusText.textContent=`+${totalToFetch} Ep Ready`;
+    }
+}
+
+/* ─────────────────────────────────────────────
+   TOPBAR / PANEL CONTROLS
+───────────────────────────────────────────── */
+function toggleBar(){
+    const inner=document.getElementById('topbar-inner');
+    const btn=document.getElementById('toggle-bar-btn');
+    btn.classList.toggle('open',inner.classList.toggle('open'));
+}
+function toggleServerPanel(){
+    const panel=document.getElementById('server-panel');
+    const btn=document.getElementById('srv-toggle-btn');
+    btn.classList.toggle('open',panel.classList.toggle('visible'));
+}
+function setLang(lang){
+    currentLang=lang;
+    document.getElementById('btn-dub').classList.toggle('active',lang==='dub');
+    document.getElementById('btn-sub').classList.toggle('active',lang==='sub');
+    const malId=String(document.getElementById('inp-mal').value).trim();
+    const ep=String(document.getElementById('inp-ep').value).trim();
+    if(allExtractedStreams&&allExtractedStreams.length>0&&cachedMalId===malId&&cachedEp===ep){
+        const best=getBestHdStream(allExtractedStreams,lang);
+        if(best){playStream(best);renderServerPanel(allExtractedStreams);}
+        else showPlayer(malId,ep,lang);
+    } else if(malId&&ep) showPlayer(malId,ep,lang);
+}
+
+/* ─────────────────────────────────────────────
+   PLAY STREAM (HLS + native + iframe)
+───────────────────────────────────────────── */
+function playStream(stream) {
+    activeServerStream = stream;
+    const placeholder  = document.getElementById('placeholder');
+    const video        = document.getElementById('videoPlayer');
+    const iframe       = document.getElementById('player-iframe');
+    placeholder.style.display = 'none';
+    if (!stream) return;
+
+    if (stream.type==='iframe') {
+        video.style.display='none'; video.pause();
+        iframe.src=stream.url; iframe.style.display='block';
+        return;
+    }
+    iframe.style.display='none'; iframe.src='about:blank';
+    video.style.display='block';
+
+    const proxiedUrl = getProxyUrl(stream.url);
+    if (hlsInstance){hlsInstance.destroy();hlsInstance=null;}
+
+    if (proxiedUrl.includes('.m3u8')||proxiedUrl.includes('.txt')||(stream.url&&stream.url.includes('.txt'))) {
+        if (Hls.isSupported()) {
+            hlsInstance = new Hls(buildHlsConfig(stream));
+            hlsInstance.loadSource(proxiedUrl);
+            hlsInstance.attachMedia(video);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>{video.muted=true;video.play();});});
+            hlsInstance.on(Hls.Events.ERROR,(ev,data)=>{
+                if(data.fatal) console.warn('[HLS] Fatal error:',data.type,data.details);
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src=proxiedUrl;
+            video.play().catch(()=>{video.muted=true;video.play();});
+        }
+    } else {
+        video.src=proxiedUrl;
+        video.play().catch(()=>{video.muted=true;video.play();});
+    }
+
+    video.onended = ()=>{
+        const malId=document.getElementById('inp-mal').value.trim();
+        const ep=document.getElementById('inp-ep').value.trim();
+        if(malId&&ep) triggerAutoNext(malId,ep,currentLang);
+    };
+}
+
+function buildHlsConfig(stream) {
+    const cfg = {xhrSetup:null};
+    // If the stream has extra headers baked in (from direct play), we apply them
+    if (stream._headers && Object.keys(stream._headers).length > 0) {
+        cfg.xhrSetup = function(xhr, url) {
+            Object.entries(stream._headers).forEach(([k,v])=>{
+                try{xhr.setRequestHeader(k,v);}catch(e){}
+            });
+        };
+    }
+    return cfg;
+}
+
+/* ─────────────────────────────────────────────
+   SERVER PANEL RENDER
+───────────────────────────────────────────── */
+function renderServerPanel(streams){
+    const qRow   = document.getElementById('quality-row');
+    const srvList= document.getElementById('server-list');
+    const spLoad = document.getElementById('sp-loading');
+    const spErr  = document.getElementById('sp-error');
+    const srvBtn = document.getElementById('srv-toggle-btn');
+    spLoad.style.display='none'; spErr.style.display='none';
+    qRow.innerHTML=''; srvList.innerHTML='';
+    if(!streams||!streams.length){
+        spErr.style.display='block'; spErr.textContent='No streams found for this episode.';
+        if(srvBtn) srvBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/></svg>Servers`;
+        return;
+    }
+    const qualSet=new Set(["1080p","720p","480p","360p"]);
+    streams.forEach(s=>{if(s.quality&&s.quality!=='Embed') qualSet.add(s.quality);});
+    Array.from(qualSet).forEach(q=>{
+        let ms=streams.find(s=>s.lang===currentLang&&((s.quality||'').includes(q)||(s.server||'').includes(q)));
+        if(!ms) ms=streams.find(s=>(s.quality||'').includes(q)||(s.server||'').includes(q));
+        const pill=document.createElement('button');
+        const isActive=(ms&&activeServerStream===ms);
+        pill.className='q-pill'+(isActive?' active':'')+(ms?'':' unavail');
+        pill.textContent=q;
+        if(ms){pill.onclick=()=>{document.querySelectorAll('.q-pill').forEach(p=>p.classList.remove('active'));pill.classList.add('active');playStream(ms);if(ms.lang){currentLang=ms.lang;document.getElementById('btn-dub').classList.toggle('active',currentLang==='dub');document.getElementById('btn-sub').classList.toggle('active',currentLang==='sub');}renderServerPanel(allExtractedStreams);};}
+        qRow.appendChild(pill);
+    });
+    const sorted=[...streams].sort((a,b)=>{if(a.lang===currentLang&&b.lang!==currentLang)return-1;if(a.lang!==currentLang&&b.lang===currentLang)return 1;return 0;});
+    sorted.forEach((st,idx)=>{
+        const btn=document.createElement('button');
+        const isCurrentActive=(activeServerStream===st||(!activeServerStream&&idx===0));
+        btn.className='srv-btn'+(isCurrentActive?' active':'');
+        const nameSpan=document.createElement('span');
+        nameSpan.textContent=st.server||`OtakuVid Server ${idx+1}`;
+        btn.appendChild(nameSpan);
+        const badgeText=(st.quality||'')+(st.lang?` ${st.lang.toUpperCase()}`:'');
+        if(badgeText.trim()){const badge=document.createElement('span');badge.className='srv-badge';badge.textContent=badgeText.trim();btn.appendChild(badge);}
+        btn.onclick=()=>{document.querySelectorAll('.srv-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');playStream(st);if(st.lang){currentLang=st.lang;document.getElementById('btn-dub').classList.toggle('active',currentLang==='dub');document.getElementById('btn-sub').classList.toggle('active',currentLang==='sub');}renderServerPanel(allExtractedStreams);};
+        srvList.appendChild(btn);
+    });
+    if(srvBtn){
+        const activeRes=activeServerStream?`${activeServerStream.quality} ${activeServerStream.lang?activeServerStream.lang.toUpperCase():''}`:streams.length+' Streams';
+        srvBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/></svg>Servers (${activeRes.trim()||streams.length+' Streams'})`;
+    }
+}
+
+/* ─────────────────────────────────────────────
+   SHOW PLAYER (MAL ID + EP)
+───────────────────────────────────────────── */
+function getBestHdStream(streams,preferredLang='dub'){
+    if(!streams||streams.length===0) return null;
+    const priority=["1080p","720p","480p","360p"];
+    const pref=streams.filter(s=>s.lang===preferredLang);
+    if(pref.length>0){for(const r of priority){const f=pref.find(s=>(s.quality||s.server||'').includes(r));if(f)return f;}return pref[0];}
+    const alt=streams.filter(s=>s.lang!==(preferredLang==='dub'?'dub':'sub'));
+    if(alt.length>0){for(const r of priority){const f=alt.find(s=>(s.quality||s.server||'').includes(r));if(f)return f;}return alt[0];}
+    for(const r of priority){const f=streams.find(s=>(s.quality||s.server||'').includes(r));if(f)return f;}
+    return streams[0];
+}
+
+async function showPlayer(malId,ep,lang='dub'){
+    cancelAutoNext(); currentLang=lang;
+    const myToken=++_fetchToken;
+    document.getElementById('inp-mal').value=malId;
+    document.getElementById('inp-ep').value=ep;
+    document.getElementById('btn-dub').classList.toggle('active',lang==='dub');
+    document.getElementById('btn-sub').classList.toggle('active',lang==='sub');
+    document.title=`OtakuVid · MAL ${malId} · Ep ${ep} · ${lang.toUpperCase()}`;
+    const spinner=document.getElementById('extract-spinner');
+    const prefetchStatus=document.getElementById('prefetch-status');
+    if(spinner) spinner.style.display='flex';
+    if(prefetchStatus) prefetchStatus.style.display='none';
+    document.getElementById('srv-toggle-btn').classList.add('show');
+    document.getElementById('quality-row').innerHTML='';
+    document.getElementById('server-list').innerHTML='';
+    document.getElementById('sp-error').style.display='none';
+    document.getElementById('sp-loading').style.display='flex';
+    try{
+        const data=await getOtakuVidStreams(malId,ep);
+        if(myToken!==_fetchToken) return;
+        document.getElementById('sp-loading').style.display='none';
+        const streams=data.results.streams||[];
+        allExtractedStreams=streams; cachedMalId=String(malId); cachedEp=String(ep);
+        if(streams.length>0){
+            const best=getBestHdStream(streams,lang);
+            playStream(best); renderServerPanel(streams);
+            preExtractNextEpisodes(malId,ep,50);
+        } else {
+            document.getElementById('sp-error').style.display='block';
+            document.getElementById('sp-error').textContent=`No streams available for MAL ${malId} Ep ${ep}.`;
+        }
+    } catch(err){
+        if(myToken!==_fetchToken) return;
+        document.getElementById('sp-loading').style.display='none';
+        document.getElementById('sp-error').style.display='block';
+        document.getElementById('sp-error').textContent='Error: '+err.message;
+    } finally {
+        if(myToken===_fetchToken&&spinner) spinner.style.display='none';
+    }
+}
+
+function loadPlayer(){
+    const malId=document.getElementById('inp-mal').value.trim();
+    const ep=document.getElementById('inp-ep').value.trim();
+    if(!malId||!ep){alert('Please enter both MAL ID and episode number.');return;}
+    showPlayer(malId,ep,currentLang);
+}
+function goPrevEp(){const malId=document.getElementById('inp-mal').value.trim();const ep=parseInt(document.getElementById('inp-ep').value.trim(),10);if(!malId||isNaN(ep)||ep<=1)return;showPlayer(malId,ep-1,currentLang);}
+function goNextEp(){const malId=document.getElementById('inp-mal').value.trim();const ep=parseInt(document.getElementById('inp-ep').value.trim(),10);if(!malId||isNaN(ep))return;showPlayer(malId,ep+1,currentLang);}
+
+/* ─────────────────────────────────────────────
+   AUTO-NEXT
+───────────────────────────────────────────── */
+function triggerAutoNext(malId,ep,lang){
+    if(!document.getElementById('chk-autonext').checked) return;
+    const nextEp=parseInt(ep,10)+1;
+    document.getElementById('an-ep-label').textContent=`Episode ${nextEp}`;
+    const overlay=document.getElementById('autonext-overlay');
+    const bar=document.getElementById('an-bar');
+    overlay.style.display='block';
+    bar.style.transition='none';bar.style.transform='scaleX(1)';
+    bar.getBoundingClientRect();
+    bar.style.transition=`transform ${COUNTDOWN_S}s linear`;bar.style.transform='scaleX(0)';
+    let remaining=COUNTDOWN_S;
+    autoNextTimer=setInterval(()=>{if(--remaining<=0)goNextNow();},1000);
+}
+function goNextNow(){cancelAutoNext();const malId=document.getElementById('inp-mal').value.trim();const ep=parseInt(document.getElementById('inp-ep').value.trim(),10);if(!malId||isNaN(ep))return;showPlayer(malId,ep+1,currentLang);}
+function cancelAutoNext(){clearInterval(autoNextTimer);autoNextTimer=null;const ov=document.getElementById('autonext-overlay');if(ov)ov.style.display='none';}
+
+/* ─────────────────────────────────────────────
+   URL PARAMS
+───────────────────────────────────────────── */
+function parseParamsFromUrl(){
+    const path=window.location.pathname,search=window.location.search,hash=window.location.hash;
+    const pm=path.match(/\/(\d+)\/(\d+)(?:\/(dub|sub))?\/?$/i);
+    if(pm) return{malId:pm[1],epNum:pm[2],lang:pm[3]||'dub'};
+    const qm=search.match(/\?(\d+)[\/&](\d+)(?:[\/&](dub|sub))?/i);
+    if(qm) return{malId:qm[1],epNum:qm[2],lang:qm[3]||'dub'};
+    const sp=new URLSearchParams(search);
+    const qMal=sp.get('mal_id')||sp.get('malId')||sp.get('id');
+    const qEp=sp.get('ep')||sp.get('ep_num')||sp.get('episode');
+    const qLang=sp.get('lang')||sp.get('type');
+    if(qMal&&qEp) return{malId:qMal,epNum:qEp,lang:qLang||'dub'};
+    const hm=hash.match(/#\/?(\d+)[\/&](\d+)(?:[\/&](dub|sub))?/i);
+    if(hm) return{malId:hm[1],epNum:hm[2],lang:hm[3]||'dub'};
+    return null;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIRECT STREAM MODAL
+═══════════════════════════════════════════════════════════ */
+
+function openDirectModal(){
+    const overlay=document.getElementById('direct-modal-overlay');
+    overlay.classList.add('open');
+    // Auto-read clipboard on open
+    autoDetectClipboard();
+    updateNowPlayingBanner();
+}
+
+function closeDirectModal(){
+    document.getElementById('direct-modal-overlay').classList.remove('open');
+}
+
+function overlayClickClose(e){
+    if(e.target===document.getElementById('direct-modal-overlay')) closeDirectModal();
+}
+
+/* ── Clipboard auto-detect ── */
+async function autoDetectClipboard(){
+    try{
+        const text=(await navigator.clipboard.readText()).trim();
+        if(isStreamUrl(text)){
+            const inp=document.getElementById('dm-url-inp');
+            if(!inp.value||inp.value!==text){
+                inp.value=text;
+                setProxyStatusForUrl(text);
+            }
+        }
+    }catch(e){/* clipboard permission denied - silent */}
+}
+
+async function pasteFromClipboard(){
+    try{
+        const text=(await navigator.clipboard.readText()).trim();
+        document.getElementById('dm-url-inp').value=text;
+        setProxyStatusForUrl(text);
+    }catch(e){
+        const inp=document.getElementById('dm-url-inp');
+        inp.focus();
+        document.execCommand('paste');
+    }
+}
+
+function isStreamUrl(s){
+    if(!s||typeof s!=='string') return false;
+    return /^https?:\/\/.+\.(m3u8|txt|mp4|mkv|ts|webm|avi|flv)(\?.*)?$/i.test(s)||
+           /^https?:\/\//.test(s) && (s.includes('m3u8')||s.includes('stream')||s.includes('hls')||s.includes('.ts'));
+}
+
+/* ── Proxy status indicator ── */
+function setProxyStatusForUrl(url){
+    const dot  = document.getElementById('proxy-status-dot');
+    const text = document.getElementById('proxy-status-text');
+    if(!url){dot.className='';text.textContent='Enter a stream URL to begin';return;}
+    if(url.includes('anivexa.onrender.com/proxy')){
+        dot.className='proxied';text.textContent='Already routed through proxy';
+    } else if(/\.(m3u8|txt)(\?.*)?$/i.test(url)){
+        dot.className='active';text.textContent='HLS / M3U8 stream detected — ready to play';
+    } else if(/\.mp4(\?.*)?$/i.test(url)){
+        dot.className='active';text.textContent='MP4 stream detected';
+    } else {
+        dot.className='active';text.textContent='URL detected';
+    }
+}
+
+/* Watch URL input changes */
+document.getElementById('dm-url-inp').addEventListener('input',function(){
+    clearTimeout(dmUrlChangeTimer);
+    dmUrlChangeTimer=setTimeout(()=>setProxyStatusForUrl(this.value.trim()),400);
+});
+
+/* ── Proxy mode ── */
+function toggleProxyMode(){
+    dmProxyEnabled=!dmProxyEnabled;
+    const btn=document.getElementById('dm-proxy-toggle');
+    btn.textContent=dmProxyEnabled?'ON':'OFF';
+    btn.classList.toggle('on',dmProxyEnabled);
+}
+
+function setProxyPreset(name){
+    const proxyInp=document.getElementById('dm-proxy-inp');
+    if(name==='custom'){proxyInp.focus();return;}
+    if(PROXY_PRESETS[name]){
+        proxyInp.value=PROXY_PRESETS[name];
+        if(!dmProxyEnabled) toggleProxyMode();
+    }
+}
+
+/* ── Advanced section ── */
+function toggleAdvanced(){
+    const sec=document.getElementById('adv-section');
+    const btn=document.getElementById('adv-toggle');
+    sec.classList.toggle('open');
+    btn.classList.toggle('open');
+}
+
+/* ── Header rows ── */
+function addHeaderRow(key='',value=''){
+    const list=document.getElementById('dm-headers-list');
+    const row=document.createElement('div');
+    row.className='dm-header-row';
+    row.innerHTML=`
+        <input class="key-inp" type="text" placeholder="Header-Name" value="${escHtml(key)}" spellcheck="false" autocomplete="off">
+        <input type="text" placeholder="Header-Value" value="${escHtml(value)}" spellcheck="false" autocomplete="off">
+        <button class="dm-remove-hdr" onclick="this.parentElement.remove()" title="Remove">&#10005;</button>
+    `;
+    list.appendChild(row);
+}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+
+function collectHeaders(){
+    const rows=document.querySelectorAll('#dm-headers-list .dm-header-row');
+    const headers={};
+    rows.forEach(row=>{
+        const [keyInp,valInp]=row.querySelectorAll('input');
+        const k=(keyInp.value||'').trim();
+        const v=(valInp.value||'').trim();
+        if(k) headers[k]=v;
+    });
+    const origin=document.getElementById('dm-origin-inp').value.trim();
+    const referer=document.getElementById('dm-referer-inp').value.trim();
+    if(origin) headers['Origin']=origin;
+    if(referer) headers['Referer']=referer;
+    return headers;
+}
+
+/* ── Now-playing banner ── */
+function updateNowPlayingBanner(){
+    const banner=document.getElementById('dm-now-playing');
+    const urlEl =document.getElementById('dm-now-playing-url');
+    if(dmCurrentUrl){
+        banner.style.display='block';
+        urlEl.textContent=dmCurrentUrl;
+    } else {
+        banner.style.display='none';
+    }
+}
+
+/* ── PLAY ── */
+async function directPlay(){
+    const rawUrl  = document.getElementById('dm-url-inp').value.trim();
+    const proxyBase = dmProxyEnabled ? document.getElementById('dm-proxy-inp').value.trim() : '';
+    const headers = collectHeaders();
+    const errorEl = document.getElementById('dm-error');
+    const playBtn = document.getElementById('dm-play-btn');
+
+    errorEl.style.display='none';
+    if(!rawUrl){errorEl.textContent='Please enter a stream URL.';errorEl.style.display='block';return;}
+
+    playBtn.classList.add('loading');
+
+    try{
+        let finalUrl = proxyBase ? buildProxiedUrl(rawUrl, proxyBase) : getProxyUrl(rawUrl);
+
+        // Detect type
+        const isHls = /\.(m3u8|txt)(\?.*)?$/i.test(rawUrl) || rawUrl.toLowerCase().includes('m3u8');
+
+        const video  = document.getElementById('videoPlayer');
+        const iframe = document.getElementById('player-iframe');
+        const ph     = document.getElementById('placeholder');
+        ph.style.display='none';
+        iframe.style.display='none'; iframe.src='about:blank';
+        video.style.display='block';
+
+        if(hlsInstance){hlsInstance.destroy();hlsInstance=null;}
+
+        const stream = {url:rawUrl, _headers:headers, type:'mp4'};
+
+        if(isHls){
+            if(Hls.isSupported()){
+                const hlsCfg = {
+                    xhrSetup: Object.keys(headers).length>0 ? (xhr)=>{
+                        Object.entries(headers).forEach(([k,v])=>{try{xhr.setRequestHeader(k,v);}catch(e){}});
+                    } : null
+                };
+                // remove null
+                if(!hlsCfg.xhrSetup) delete hlsCfg.xhrSetup;
+                hlsInstance=new Hls(hlsCfg);
+                hlsInstance.loadSource(finalUrl);
+                hlsInstance.attachMedia(video);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>{
+                    video.play().catch(()=>{video.muted=true;video.play();});
+                });
+                hlsInstance.on(Hls.Events.ERROR,(ev,data)=>{
+                    if(data.fatal){
+                        // Show error to user
+                        errorEl.textContent=`HLS error: ${data.details} — try enabling proxy or a different proxy.`;
+                        errorEl.style.display='block';
+                    }
+                });
+            } else if(video.canPlayType('application/vnd.apple.mpegurl')){
+                video.src=finalUrl;
+                video.play().catch(()=>{video.muted=true;video.play();});
+            } else {
+                throw new Error('HLS is not supported in this browser.');
+            }
+        } else {
+            video.src=finalUrl;
+            video.play().catch(()=>{video.muted=true;video.play();});
+        }
+
+        dmCurrentUrl = rawUrl;
+        updateNowPlayingBanner();
+        setProxyStatusForUrl(rawUrl);
+        closeDirectModal();
+
+    } catch(err){
+        errorEl.textContent='Error: '+err.message;
+        errorEl.style.display='block';
+    } finally {
+        playBtn.classList.remove('loading');
+    }
+}
+
+/* ─────────────────────────────────────────────
+   KEYBOARD SHORTCUTS
+───────────────────────────────────────────── */
+document.addEventListener('keydown',e=>{
+    // Esc closes modal
+    if(e.key==='Escape') closeDirectModal();
+    // Ctrl+V / Cmd+V when modal open auto-detects
+    if((e.ctrlKey||e.metaKey)&&e.key==='v'){
+        const overlay=document.getElementById('direct-modal-overlay');
+        if(overlay.classList.contains('open')) setTimeout(autoDetectClipboard,100);
+    }
+    // Enter inside modal url field triggers play
+    if(e.key==='Enter'&&e.target===document.getElementById('dm-url-inp')) directPlay();
+});
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+// Pre-fill proxy with default (Anivexa)
+document.getElementById('dm-proxy-inp').value = PROXY_PRESETS.anivexa;
+
+window.OtakuVidAPI = {
+    getStreams: getOtakuVidStreams,
+    search: searchOtakuVid,
+    loadDatasets: loadAllDatasets,
+    getProxyUrl,
+    openDirectPlayer: openDirectModal
+};
+
+window.addEventListener('DOMContentLoaded',()=>{
+    const params=parseParamsFromUrl();
+    if(params) showPlayer(params.malId,params.epNum,params.lang);
+});
+</script>
+</body>
 </html>
