@@ -736,14 +736,19 @@
         const streamCache = new Map();
         let preFetchAbortToken = 0;
 
-        function getProxyUrl(url) {
+        // PROXY_HOST / DEFAULT_REFERER centralised so every caller (manifest AND
+        // every sub-request hls.js makes) stays consistent.
+        const PROXY_HOST = 'https://anivexa.onrender.com/proxy';
+        const DEFAULT_REFERER = 'https://otakuhg.site/';
+
+        function getProxyUrl(url, referer = DEFAULT_REFERER) {
             if (!url) return '';
-            if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
-            const cleanUrl = url.split('?')[0].toLowerCase();
-            if (cleanUrl.endsWith('.txt')) {
-                return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://otakuvid.online/`;
-            }
-            return url;
+            // Already a fully-formed proxy URL -> don't wrap it a second time
+            // (prevents the double-encoded "proxy of a proxy" bug).
+            if (url.startsWith(PROXY_HOST)) return url;
+            // Never try to proxy local/blob/data URLs.
+            if (/^(blob:|data:)/i.test(url)) return url;
+            return `${PROXY_HOST}?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}`;
         }
 
         async function loadAllDatasets() {
@@ -1088,17 +1093,57 @@
             iframe.src = 'about:blank';
             video.style.display = 'block';
 
-            const proxiedUrl = getProxyUrl(stream.url);
+            // Referer required by the source CDN for THIS stream. Falls back to the
+            // default if the dataset entry doesn't specify one.
+            const streamReferer = stream.referer || DEFAULT_REFERER;
+            const proxiedUrl = getProxyUrl(stream.url, streamReferer);
 
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
             if (proxiedUrl.includes('.m3u8') || proxiedUrl.includes('.txt') || (stream.url && stream.url.includes('.txt'))) {
                 if (Hls.isSupported()) {
-                    hlsInstance = new Hls();
+                    hlsInstance = new Hls({
+                        // THE ACTUAL FIX:
+                        // Without this, hls.js only respects the proxied master URL
+                        // we pass to loadSource(). Every request it makes AFTER that
+                        // (variant/level playlists, AES keys, and every .ts/.m4s
+                        // fragment listed inside the playlist) is fired directly at
+                        // the source CDN with the browser's own Origin/Referer,
+                        // bypassing the proxy entirely. That's why the master loads
+                        // but playback then stalls or never starts: the CDN rejects
+                        // or CORS-blocks the un-proxied, wrong-referer segment
+                        // requests. xhrSetup runs on every single request hls.js
+                        // makes, so we rewrite the URL through the proxy here too.
+                        xhrSetup: function (xhr, url) {
+                            const rewritten = getProxyUrl(url, streamReferer);
+                            xhr.open('GET', rewritten, true);
+                        },
+                        // Same idea for fetch-based loading paths / low-latency mode.
+                        fetchSetup: function (context, initParams) {
+                            context.url = getProxyUrl(context.url, streamReferer);
+                            return new Request(context.url, initParams);
+                        }
+                    });
                     hlsInstance.loadSource(proxiedUrl);
                     hlsInstance.attachMedia(video);
                     hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
                         video.play().catch(() => { video.muted = true; video.play(); });
+                    });
+                    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                        console.error('HLS error:', data.type, data.details, data);
+                        if (data.fatal) {
+                            switch (data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    hlsInstance.startLoad();
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    hlsInstance.recoverMediaError();
+                                    break;
+                                default:
+                                    hlsInstance.destroy();
+                                    break;
+                            }
+                        }
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = proxiedUrl;
