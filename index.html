@@ -518,6 +518,295 @@
             padding: 4px 0;
         }
 
+        #player-wrap.custom-hls #videoPlayer {
+            cursor: pointer;
+        }
+
+        #hls-controls {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 15;
+            padding: 34px 14px 10px;
+            background: linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.55) 45%, transparent 100%);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity .2s ease, transform .2s ease;
+            pointer-events: none;
+        }
+
+        #player-wrap.controls-visible #hls-controls,
+        #player-wrap.controls-paused #hls-controls {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #hls-seek-row {
+            position: relative;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        #hls-seek-track {
+            position: relative;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,.18);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        #hls-buffered {
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 0%;
+            background: rgba(255,255,255,.32);
+            border-radius: 3px;
+        }
+
+        #hls-progress {
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 0%;
+            background: #7c6dfa;
+            border-radius: 3px;
+        }
+
+        #hls-seek-thumb {
+            position: absolute;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            left: 0%;
+            box-shadow: 0 0 0 3px rgba(124,109,250,.35);
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        #hls-seek-row:hover #hls-seek-thumb {
+            opacity: 1;
+        }
+
+        #hls-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hls-btn {
+            background: none;
+            border: none;
+            color: #e2e2e8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            transition: background .15s, color .15s;
+        }
+
+        .hls-btn:hover {
+            background: rgba(255,255,255,.12);
+            color: #fff;
+        }
+
+        #hls-time {
+            font-size: 12px;
+            color: #ccc;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
+        }
+
+        #hls-vol-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        #hls-vol-slider {
+            width: 70px;
+            accent-color: #7c6dfa;
+            cursor: pointer;
+        }
+
+        .hls-spacer { flex: 1; }
+
+        .hls-menu-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .hls-menu {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
+            background: #13131a;
+            border: 1px solid #2e2e42;
+            border-radius: 10px;
+            padding: 6px;
+            min-width: 130px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,.6);
+            display: none;
+        }
+
+        .hls-menu.visible { display: block; }
+
+        .hls-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ccc;
+            border-radius: 7px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .hls-menu-item:hover {
+            background: rgba(124,109,250,.18);
+            color: #fff;
+        }
+
+        .hls-menu-item.active {
+            color: #fff;
+            background: rgba(124,109,250,.28);
+        }
+
+        #hls-center-play {
+            position: absolute;
+            inset: 0;
+            z-index: 12;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(0,0,0,.25);
+        }
+
+        #hls-center-play.show { display: flex; }
+
+        #hls-center-play .circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(19,19,26,.75);
+            border: 1px solid rgba(124,109,250,.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            transition: transform .15s;
+        }
+
+        #hls-center-play:hover .circle {
+            transform: scale(1.08);
+        }
+
+        #hls-buffer-spinner {
+            position: absolute;
+            inset: 0;
+            z-index: 11;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #hls-buffer-spinner.show { display: flex; }
+
+        #hls-buffer-spinner .spin-lg {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255,255,255,.15);
+            border-top-color: #7c6dfa;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        #hls-error-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 25;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(10,10,15,.92);
+            text-align: center;
+            padding: 20px;
+        }
+
+        #hls-error-overlay.show { display: flex; }
+
+        #hls-error-overlay p {
+            font-size: 13px;
+            color: #f87171;
+            max-width: 320px;
+        }
+
+        #hls-error-overlay button {
+            padding: 7px 18px;
+            border-radius: 8px;
+            border: 1px solid #7c6dfa;
+            background: rgba(124,109,250,.18);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #hls-error-overlay button:hover {
+            background: #7c6dfa;
+        }
+
+        #hls-live-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #f87171;
+            letter-spacing: .04em;
+            flex-shrink: 0;
+        }
+
+        #hls-live-badge.show { display: flex; }
+
+        #hls-live-badge .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #f87171;
+        }
+
+        #player-wrap:fullscreen,
+        #player-wrap.is-fullscreen {
+            background: #000;
+        }
+
+        #player-wrap:fullscreen #videoPlayer {
+            object-fit: contain;
+        }
+
         #autonext-overlay {
             display: none;
             position: absolute;
@@ -673,7 +962,7 @@
                         </div>
                         <div id="quality-row"></div>
                         <div id="sp-loading" style="display:none">
-                            <div class="spin"></div> <span class="sp-label">Fetching streams&#8230;</span>
+                            <div class="spin"></div> Fetching streams&#8230;
                         </div>
                         <div id="sp-error" style="display:none"></div>
                         <div id="server-list"></div>
@@ -699,8 +988,77 @@
                 <p class="hint">Enter MAL ID + Episode then press Play</p>
             </div>
 
-            <video id="videoPlayer" controls autoplay style="display:none;"></video>
+            <video id="videoPlayer" autoplay playsinline style="display:none;"></video>
             <iframe id="player-iframe" allow="autoplay; fullscreen" allowfullscreen style="display:none;"></iframe>
+
+            <div id="hls-buffer-spinner"><div class="spin-lg"></div></div>
+
+            <div id="hls-center-play" onclick="hlsTogglePlay()">
+                <div class="circle">
+                    <svg id="hls-center-play-icon" width="26" height="26" viewBox="0 0 24 24" fill="#fff">
+                        <polygon points="6 3 21 12 6 21 6 3" />
+                    </svg>
+                </div>
+            </div>
+
+            <div id="hls-error-overlay">
+                <p id="hls-error-msg">Playback error.</p>
+                <button onclick="hlsRetry()">Retry</button>
+            </div>
+
+            <div id="hls-controls">
+                <div id="hls-seek-row" onclick="hlsSeekClick(event)" onmousemove="hlsSeekHover(event)">
+                    <div id="hls-seek-track">
+                        <div id="hls-buffered"></div>
+                        <div id="hls-progress"></div>
+                    </div>
+                    <div id="hls-seek-thumb"></div>
+                </div>
+                <div id="hls-controls-row">
+                    <button class="hls-btn" id="hls-play-btn" onclick="hlsTogglePlay()" title="Play/Pause">
+                        <svg id="hls-play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 21 12 6 21 6 3" /></svg>
+                    </button>
+                    <button class="hls-btn" onclick="hlsSkip(-10)" title="Back 10s">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    </button>
+                    <button class="hls-btn" onclick="hlsSkip(10)" title="Forward 10s">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    </button>
+                    <div id="hls-live-badge"><span class="dot"></span>LIVE</div>
+                    <span id="hls-time">0:00 / 0:00</span>
+
+                    <div class="hls-spacer"></div>
+
+                    <div id="hls-vol-wrap">
+                        <button class="hls-btn" id="hls-mute-btn" onclick="hlsToggleMute()" title="Mute">
+                            <svg id="hls-vol-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                        </button>
+                        <input id="hls-vol-slider" type="range" min="0" max="1" step="0.01" value="1" oninput="hlsSetVolume(this.value)">
+                    </div>
+
+                    <div class="hls-menu-wrap">
+                        <button class="hls-btn" onclick="hlsToggleMenu('hls-speed-menu')" title="Playback speed">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </button>
+                        <div class="hls-menu" id="hls-speed-menu"></div>
+                    </div>
+
+                    <div class="hls-menu-wrap">
+                        <button class="hls-btn" onclick="hlsToggleMenu('hls-quality-menu')" title="Quality">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                        </button>
+                        <div class="hls-menu" id="hls-quality-menu"></div>
+                    </div>
+
+                    <button class="hls-btn" id="hls-pip-btn" onclick="hlsTogglePip()" title="Picture in Picture">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="10" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
+                    </button>
+
+                    <button class="hls-btn" id="hls-fs-btn" onclick="hlsToggleFullscreen()" title="Fullscreen">
+                        <svg id="hls-fs-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                    </button>
+                </div>
+            </div>
 
             <div id="autonext-overlay">
                 <div class="an-title">Up next</div>
@@ -736,226 +1094,14 @@
         const streamCache = new Map();
         let preFetchAbortToken = 0;
 
-        // PROXY_HOST / DEFAULT_REFERER centralised so every caller (manifest AND
-        // every sub-request hls.js makes) stays consistent.
-        const PROXY_ORIGIN = 'https://anivexa.onrender.com';
-        const PROXY_HOST = `${PROXY_ORIGIN}/proxy`;
-        const DEFAULT_REFERER = 'https://otakuhg.site/';
-
-        // ---- Proxy warm-up -------------------------------------------------
-        // anivexa.onrender.com runs on Render's free tier, which spins the
-        // service down after ~15 minutes of inactivity. A cold instance can
-        // take 20-50+ seconds to wake up on its next request. hls.js's default
-        // timeouts (10s manifest/level, 20s fragment) give up long before that,
-        // which is exactly why playback "sometimes works, sometimes doesn't" -
-        // it depends on whether the dyno happened to already be awake.
-        //
-        // We fire a fire-and-forget ping as early as possible (page load, and
-        // again the instant the user asks for an episode) so the dyno is warm
-        // by the time hls.js actually needs it. This is best-effort: failures
-        // here are ignored, it's just a warm-up nudge.
-        let proxyWarm = false;
-        let proxyWarmupPromise = null;
-        function warmupProxy() {
-            if (proxyWarmupPromise) return proxyWarmupPromise;
-            proxyWarmupPromise = fetch(PROXY_ORIGIN, { mode: 'no-cors', cache: 'no-store' })
-                .catch(() => { })
-                .finally(() => { proxyWarm = true; });
-            return proxyWarmupPromise;
-        }
-
-        function getProxyUrl(url, referer = DEFAULT_REFERER) {
+        function getProxyUrl(url) {
             if (!url) return '';
-            // Already a fully-formed proxy URL -> don't wrap it a second time
-            // (prevents the double-encoded "proxy of a proxy" bug).
-            if (url.startsWith(PROXY_HOST)) return url;
-            // Never try to proxy local/blob/data URLs.
-            if (/^(blob:|data:)/i.test(url)) return url;
-            return `${PROXY_HOST}?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}`;
-        }
-
-        // =====================================================================
-        // ADVANCED PROXY-AWARE HLS LOADER
-        // =====================================================================
-        // Why xhrSetup alone isn't enough:
-        // A master playlist can point to variant/level playlists with a RELATIVE
-        // path. Those level playlists can in turn point to segments and
-        // #EXT-X-KEY URIs, ALSO often relative. hls.js resolves every relative
-        // reference against the URL of the document it was just parsed from.
-        //
-        // If we ever hand hls.js (or its parser) a PROXIED url as "the current
-        // document's URL", every relative reference inside gets resolved against
-        // the proxy's own origin instead of the real CDN directory - producing
-        // garbage URLs a few levels deep even if the very first request worked.
-        // This is why playback can succeed for the master.txt itself yet still
-        // die shortly after: the corruption happens on the SECOND hop (level
-        // playlist or key), not the first.
-        //
-        // The fix: replace hls.js's entire network layer with a custom Loader
-        // that keeps track of the TRUE (unproxied) URL at every single level -
-        // manifest, level playlist, key, and fragment - and only proxies the
-        // request at the very last moment, right before the fetch() call fires.
-        // Text responses that look like playlists get every relative URI (plain
-        // lines AND URI="..." attributes in #EXT-X-KEY / #EXT-X-MAP) resolved to
-        // an ABSOLUTE (still real, not yet proxied) URL before being handed back
-        // to hls.js. That absolute URL becomes "context.url" for whatever hls.js
-        // requests next, so this stays correct no matter how many levels deep the
-        // playlist hierarchy goes.
-        // =====================================================================
-
-        // The referer currently in effect for the stream hls.js is playing.
-        // Set once per playStream() call, read by every request the custom
-        // loader below makes (manifest, level, key, fragment).
-        let CURRENT_STREAM_REFERER = DEFAULT_REFERER;
-
-        function resolveAbsoluteUrl(possiblyRelative, baseUrl) {
-            // Already absolute (has a scheme) - return untouched. Do NOT run
-            // this through new URL(), which would force-lowercase the host.
-            if (/^[a-z][a-z0-9+.-]*:\/\//i.test(possiblyRelative)) return possiblyRelative;
-
-            // Protocol-relative ("//host/path") - borrow the base's scheme only.
-            if (possiblyRelative.startsWith('//')) {
-                const scheme = (baseUrl.match(/^[a-z][a-z0-9+.-]*:/i) || ['https:'])[0];
-                return scheme + possiblyRelative;
+            if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
+            const cleanUrl = url.split('?')[0].toLowerCase();
+            if (cleanUrl.endsWith('.txt')) {
+                return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://otakuvid.online/`;
             }
-
-            // Genuinely relative path. CRITICAL: these obfuscated CDN hostnames
-            // (e.g. "eTOjdo3Yv1iw.somehost.shop") are mixed-case tokens the
-            // origin validates case-sensitively. The WHATWG URL parser used by
-            // `new URL(rel, base).href` ALWAYS force-lowercases hostnames per
-            // spec - that's true in every browser, not a quirk we can configure
-            // away. So we split the base into its authority (scheme+host, kept
-            // as an exact-case string) and its path, then use the URL API only
-            // to resolve the PATH portion against a disposable dummy host -
-            // that gets us battle-tested "../", "./" and query-string handling
-            // for free, without ever letting the real hostname pass through the
-            // part of the API that mangles case.
-            const m = baseUrl.match(/^([a-z][a-z0-9+.-]*:\/\/[^\/?#]+)([^?#]*)/i);
-            if (!m) return possiblyRelative; // malformed base, best effort
-            const authority = m[1];
-            const basePath = m[2] || '/';
-            const DUMMY = 'http://relative-resolve.invalid';
-            const resolvedPath = new URL(possiblyRelative, DUMMY + basePath).href.slice(DUMMY.length);
-            return authority + resolvedPath;
-        }
-
-        function looksLikePlaylist(text) {
-            return typeof text === 'string' && text.trimStart().startsWith('#EXTM3U');
-        }
-
-        // Resolves every relative URI in a playlist to an ABSOLUTE (still
-        // unproxied) URL against baseUrl. Does NOT proxy anything here - that
-        // happens later, per-request, inside the loader's load().
-        function rewritePlaylistUrlsToAbsolute(text, baseUrl) {
-            const attrUriRegex = /URI="([^"]+)"/i;
-            return text.split(/\r?\n/).map(line => {
-                const trimmed = line.trim();
-                if (!trimmed) return line;
-
-                if (trimmed.startsWith('#')) {
-                    // Tags carrying a URI="..." attribute: #EXT-X-KEY, #EXT-X-MAP,
-                    // #EXT-X-MEDIA (audio/subtitle groups), etc.
-                    if (attrUriRegex.test(trimmed)) {
-                        return line.replace(attrUriRegex, (m, uri) =>
-                            `URI="${resolveAbsoluteUrl(uri, baseUrl)}"`);
-                    }
-                    return line;
-                }
-
-                // A bare line that isn't a tag is a URI: either a variant
-                // playlist reference (master) or a segment reference (level).
-                return resolveAbsoluteUrl(trimmed, baseUrl);
-            }).join('\n');
-        }
-
-        class ProxyAwareHlsLoader {
-            constructor(config) {
-                this.config = config;
-                this.stats = {
-                    aborted: false, loaded: 0, retry: 0, total: 0,
-                    chunkCount: 0, bwEstimate: 0,
-                    loading: { start: 0, first: 0, end: 0 },
-                    parsing: { start: 0, end: 0 },
-                    buffering: { start: 0, first: 0, end: 0 },
-                };
-                this.context = null;
-                this.callbacks = null;
-                this.controller = null;
-                this._timeoutId = null;
-            }
-
-            destroy() { this.abort(); }
-
-            abort() {
-                if (this._timeoutId) { clearTimeout(this._timeoutId); this._timeoutId = null; }
-                if (this.controller && !this.stats.aborted) {
-                    this.stats.aborted = true;
-                    try { this.controller.abort(); } catch (e) { }
-                }
-            }
-
-            load(context, config, callbacks) {
-                this.context = context;
-                this.callbacks = callbacks;
-                this.controller = new AbortController();
-
-                // context.url is always the TRUE, unproxied, absolute URL at this
-                // point - either the one we originally passed to loadSource(), or
-                // one we produced via rewritePlaylistUrlsToAbsolute() on a prior
-                // hop. We proxy it ONLY for the actual network call below.
-                const originalUrl = context.url;
-                const referer = CURRENT_STREAM_REFERER;
-                const proxiedUrl = getProxyUrl(originalUrl, referer);
-                const isBinary = context.responseType === 'arraybuffer';
-                const timeoutMs = isBinary ? 40000 : 30000; // generous: proxy hop can be slow
-
-                const start = performance.now();
-                this.stats.loading.start = start;
-
-                this._timeoutId = setTimeout(() => this.abort(), timeoutMs);
-
-                fetch(proxiedUrl, { signal: this.controller.signal, cache: 'no-store' })
-                    .then(async (res) => {
-                        if (this._timeoutId) { clearTimeout(this._timeoutId); this._timeoutId = null; }
-                        if (!res.ok) throw new Error('HTTP ' + res.status);
-
-                        this.stats.loading.first = performance.now();
-
-                        let data;
-                        if (isBinary) {
-                            data = await res.arrayBuffer();
-                            this.stats.loaded = this.stats.total = data.byteLength;
-                        } else {
-                            let text = await res.text();
-                            if (looksLikePlaylist(text)) {
-                                text = rewritePlaylistUrlsToAbsolute(text, originalUrl);
-                            }
-                            data = text;
-                            this.stats.loaded = this.stats.total = text.length;
-                        }
-
-                        this.stats.loading.end = performance.now();
-                        this.callbacks.onSuccess(
-                            { url: originalUrl, data },
-                            this.stats,
-                            context,
-                            null
-                        );
-                    })
-                    .catch((err) => {
-                        if (this._timeoutId) { clearTimeout(this._timeoutId); this._timeoutId = null; }
-                        if (this.stats.aborted) {
-                            if (this.callbacks.onAbort) this.callbacks.onAbort(this.stats, context, null);
-                            return;
-                        }
-                        if (this.callbacks.onError) {
-                            this.callbacks.onError(
-                                { code: (err && err.status) || 0, text: (err && err.message) || 'proxy fetch failed' },
-                                context, null, this.stats
-                            );
-                        }
-                    });
-            }
+            return url;
         }
 
         async function loadAllDatasets() {
@@ -1299,137 +1445,19 @@
             iframe.style.display = 'none';
             iframe.src = 'about:blank';
             video.style.display = 'block';
+            document.getElementById('player-wrap').classList.add('custom-hls');
+            hideHlsError();
 
-            // Referer required by the source CDN for THIS stream. Falls back to the
-            // default if the dataset entry doesn't specify one.
-            const streamReferer = stream.referer || DEFAULT_REFERER;
-
-            // IMPORTANT: hls.js (and the custom loader below) resolves every
-            // relative URI it encounters inside a playlist (variant playlists,
-            // keys, segments) against the URL that document was fetched from.
-            // The ProxyAwareHlsLoader tracks the TRUE (unproxied) URL at every
-            // hop and only proxies at the moment of the actual network call -
-            // see the loader's comments above for the full explanation.
-            const realUrl = stream.url;
-            const proxiedUrl = getProxyUrl(realUrl, streamReferer); // used only for the non-hls.js (native) fallback path below
+            const proxiedUrl = getProxyUrl(stream.url);
+            currentStreamUrl = proxiedUrl;
 
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
-            if (realUrl.includes('.m3u8') || realUrl.includes('.txt')) {
-                if (Hls.isSupported()) {
-                    let retryAttempt = 0;
-                    const MAX_RETRIES = 4;
-                    const RETRY_DELAYS_MS = [1500, 3000, 6000, 10000]; // backoff, room for a cold proxy dyno
-
-                    const buildHls = () => {
-                        CURRENT_STREAM_REFERER = streamReferer;
-                        return new Hls({
-                            // THE ACTUAL FIX: a fully custom loader (see
-                            // ProxyAwareHlsLoader above) that keeps the TRUE
-                            // absolute URL at every hop of the playlist
-                            // hierarchy (master -> level -> key/fragment) and
-                            // only proxies the request at the moment it's
-                            // actually sent. xhrSetup alone can't do this
-                            // because it can't rewrite relative URLs found
-                            // INSIDE a fetched playlist body - only a custom
-                            // loader that post-processes the response can.
-                            loader: ProxyAwareHlsLoader,
-
-                            // Generous retry budget: the proxy (anivexa.onrender.com,
-                            // a free-tier Render service) can be slow to respond,
-                            // especially right after a period of inactivity.
-                            manifestLoadingTimeOut: 30000,
-                            manifestLoadingMaxRetry: 6,
-                            manifestLoadingRetryDelay: 1500,
-                            manifestLoadingMaxRetryTimeout: 30000,
-                            levelLoadingTimeOut: 30000,
-                            levelLoadingMaxRetry: 6,
-                            levelLoadingRetryDelay: 1500,
-                            levelLoadingMaxRetryTimeout: 30000,
-                            fragLoadingTimeOut: 40000,
-                            fragLoadingMaxRetry: 8,
-                            fragLoadingRetryDelay: 1500,
-                            fragLoadingMaxRetryTimeout: 30000,
-                        });
-                    };
-
-                    const setStatus = (msg) => {
-                        const load = document.getElementById('sp-loading');
-                        const errEl = document.getElementById('sp-error');
-                        if (msg) {
-                            if (errEl) errEl.style.display = 'none';
-                            if (load) { load.style.display = 'flex'; }
-                            const label = load && load.querySelector('.sp-label');
-                            if (label) label.textContent = msg;
-                        }
-                    };
-
-                    const startHls = () => {
-                        if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-                        hlsInstance = buildHls();
-                        hlsInstance.loadSource(realUrl);
-                        hlsInstance.attachMedia(video);
-
-                        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                            retryAttempt = 0; // fully recovered, reset backoff counter
-                            document.getElementById('sp-loading').style.display = 'none';
-                            video.play().catch(() => { video.muted = true; video.play(); });
-                        });
-
-                        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-                            console.error('HLS error:', data.type, data.details, data);
-                            if (!data.fatal) return;
-
-                            switch (data.type) {
-                                case Hls.ErrorTypes.NETWORK_ERROR:
-                                    if (retryAttempt < MAX_RETRIES) {
-                                        const delay = RETRY_DELAYS_MS[retryAttempt] || RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
-                                        retryAttempt++;
-                                        setStatus(`Connection hiccup, retrying (${retryAttempt}/${MAX_RETRIES})...`);
-                                        // Fully re-init rather than just startLoad() -
-                                        // a cold-starting proxy can leave hls.js's
-                                        // internal state (and the video element)
-                                        // wedged, so a clean restart is more reliable
-                                        // than resuming the same broken session.
-                                        setTimeout(startHls, delay);
-                                    } else {
-                                        document.getElementById('sp-loading').style.display = 'none';
-                                        const errEl = document.getElementById('sp-error');
-                                        errEl.style.display = 'block';
-                                        errEl.innerHTML = '';
-                                        const msg = document.createElement('div');
-                                        msg.textContent = 'Stream failed to load after several attempts. The source or proxy may be temporarily down.';
-                                        const retryBtn = document.createElement('button');
-                                        retryBtn.textContent = 'Retry';
-                                        retryBtn.style.cssText = 'margin-top:8px;padding:6px 16px;border:none;border-radius:6px;background:#7c6dfa;color:#fff;font-weight:600;cursor:pointer;';
-                                        retryBtn.onclick = () => {
-                                            retryAttempt = 0;
-                                            errEl.style.display = 'none';
-                                            warmupProxy();
-                                            startHls();
-                                        };
-                                        errEl.appendChild(msg);
-                                        errEl.appendChild(retryBtn);
-                                    }
-                                    break;
-                                case Hls.ErrorTypes.MEDIA_ERROR:
-                                    hlsInstance.recoverMediaError();
-                                    break;
-                                default:
-                                    hlsInstance.destroy();
-                                    break;
-                            }
-                        });
-                    };
-
-                    startHls();
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = proxiedUrl;
-                    video.play().catch(() => { video.muted = true; video.play(); });
-                }
+            if (proxiedUrl.includes('.m3u8') || proxiedUrl.includes('.txt') || (stream.url && stream.url.includes('.txt'))) {
+                initAdvancedHls(video, proxiedUrl);
             } else {
                 video.src = proxiedUrl;
-                video.play().catch(() => { video.muted = true; video.play(); });
+                video.play().catch(() => { video.muted = true; hlsSyncMuteIcon(); video.play(); });
             }
 
             video.onended = () => {
@@ -1437,6 +1465,326 @@
                 const ep = document.getElementById('inp-ep').value.trim();
                 if (malId && ep) triggerAutoNext(malId, ep, currentLang);
             };
+        }
+
+        // ===================== Advanced HLS Player =====================
+        let currentStreamUrl = null;
+        let hlsRetryCount = 0;
+        let hlsControlsHideTimer = null;
+        const HLS_PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+        function initAdvancedHls(video, url) {
+            hlsRetryCount = 0;
+            if (Hls.isSupported()) {
+                hlsInstance = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90,
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 600,
+                    maxBufferSize: 60 * 1000 * 1000,
+                    maxBufferHole: 0.5,
+                    liveSyncDurationCount: 3,
+                    fragLoadingMaxRetry: 6,
+                    manifestLoadingMaxRetry: 6,
+                    levelLoadingMaxRetry: 6
+                });
+                hlsInstance.loadSource(url);
+                hlsInstance.attachMedia(video);
+
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    buildQualityMenu();
+                    video.play().catch(() => { video.muted = true; hlsSyncMuteIcon(); video.play(); });
+                });
+
+                hlsInstance.on(Hls.Events.LEVEL_SWITCHED, () => buildQualityMenu());
+
+                hlsInstance.on(Hls.Events.ERROR, (evt, data) => {
+                    if (!data.fatal) return;
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            if (hlsRetryCount < 4) {
+                                hlsRetryCount++;
+                                hlsInstance.startLoad();
+                            } else {
+                                showHlsError('Network error loading stream.');
+                            }
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            if (hlsRetryCount < 4) {
+                                hlsRetryCount++;
+                                hlsInstance.recoverMediaError();
+                            } else {
+                                showHlsError('Media decoding error.');
+                            }
+                            break;
+                        default:
+                            showHlsError('Unable to play this stream.');
+                            hlsInstance.destroy();
+                            hlsInstance = null;
+                            break;
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('loadedmetadata', () => {
+                    video.play().catch(() => { video.muted = true; hlsSyncMuteIcon(); video.play(); });
+                }, { once: true });
+                document.getElementById('hls-quality-menu').innerHTML = '<div class="hls-menu-item active">Auto</div>';
+            } else {
+                showHlsError('HLS playback is not supported in this browser.');
+            }
+        }
+
+        function hlsRetry() {
+            hideHlsError();
+            if (activeServerStream) playStream(activeServerStream);
+        }
+
+        function showHlsError(msg) {
+            const ov = document.getElementById('hls-error-overlay');
+            document.getElementById('hls-error-msg').textContent = msg;
+            ov.classList.add('show');
+            document.getElementById('hls-buffer-spinner').classList.remove('show');
+        }
+
+        function hideHlsError() {
+            document.getElementById('hls-error-overlay').classList.remove('show');
+        }
+
+        function buildQualityMenu() {
+            const menu = document.getElementById('hls-quality-menu');
+            if (!menu || !hlsInstance) return;
+            menu.innerHTML = '';
+
+            const autoItem = document.createElement('div');
+            autoItem.className = 'hls-menu-item' + (hlsInstance.currentLevel === -1 ? ' active' : '');
+            autoItem.innerHTML = `<span>Auto</span>` + (hlsInstance.currentLevel === -1 ? `<span style="color:#7c6dfa">(${hlsInstance.levels[hlsInstance.currentLevel]?.height || ''}p)</span>` : '');
+            autoItem.onclick = () => { hlsInstance.currentLevel = -1; buildQualityMenu(); hlsCloseMenus(); };
+            menu.appendChild(autoItem);
+
+            const levels = hlsInstance.levels.map((lvl, idx) => ({ idx, height: lvl.height, bitrate: lvl.bitrate }))
+                .sort((a, b) => b.height - a.height);
+
+            levels.forEach(lvl => {
+                const item = document.createElement('div');
+                const isActive = hlsInstance.currentLevel === lvl.idx;
+                item.className = 'hls-menu-item' + (isActive ? ' active' : '');
+                item.innerHTML = `<span>${lvl.height}p</span>`;
+                item.onclick = () => { hlsInstance.currentLevel = lvl.idx; buildQualityMenu(); hlsCloseMenus(); };
+                menu.appendChild(item);
+            });
+        }
+
+        function buildSpeedMenu() {
+            const menu = document.getElementById('hls-speed-menu');
+            if (!menu) return;
+            menu.innerHTML = '';
+            const video = document.getElementById('videoPlayer');
+            HLS_PLAYBACK_RATES.forEach(rate => {
+                const item = document.createElement('div');
+                item.className = 'hls-menu-item' + (video.playbackRate === rate ? ' active' : '');
+                item.textContent = rate === 1 ? 'Normal' : rate + 'x';
+                item.onclick = () => {
+                    video.playbackRate = rate;
+                    buildSpeedMenu();
+                    hlsCloseMenus();
+                };
+                menu.appendChild(item);
+            });
+        }
+
+        function hlsToggleMenu(id) {
+            const menu = document.getElementById(id);
+            const wasVisible = menu.classList.contains('visible');
+            hlsCloseMenus();
+            if (!wasVisible) {
+                if (id === 'hls-speed-menu') buildSpeedMenu();
+                menu.classList.add('visible');
+            }
+        }
+
+        function hlsCloseMenus() {
+            document.querySelectorAll('.hls-menu').forEach(m => m.classList.remove('visible'));
+        }
+
+        function hlsTogglePlay() {
+            const video = document.getElementById('videoPlayer');
+            if (video.paused || video.ended) {
+                video.play().catch(() => {});
+            } else {
+                video.pause();
+            }
+        }
+
+        function hlsSkip(sec) {
+            const video = document.getElementById('videoPlayer');
+            if (!isFinite(video.duration)) return;
+            video.currentTime = Math.min(Math.max(0, video.currentTime + sec), video.duration || video.currentTime + sec);
+        }
+
+        function hlsFormatTime(t) {
+            if (!isFinite(t) || t < 0) return '0:00';
+            const h = Math.floor(t / 3600);
+            const m = Math.floor((t % 3600) / 60);
+            const s = Math.floor(t % 60);
+            const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
+            const ss = String(s).padStart(2, '0');
+            return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+        }
+
+        function hlsSeekClick(e) {
+            const video = document.getElementById('videoPlayer');
+            if (!isFinite(video.duration)) return;
+            const rect = document.getElementById('hls-seek-track').getBoundingClientRect();
+            const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+            video.currentTime = pct * video.duration;
+        }
+
+        function hlsSeekHover(e) {
+            const rect = document.getElementById('hls-seek-track').getBoundingClientRect();
+            const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+            document.getElementById('hls-seek-thumb').style.left = (pct * 100) + '%';
+        }
+
+        function hlsToggleMute() {
+            const video = document.getElementById('videoPlayer');
+            video.muted = !video.muted;
+            if (!video.muted && video.volume === 0) video.volume = 0.5;
+            document.getElementById('hls-vol-slider').value = video.muted ? 0 : video.volume;
+            hlsSyncMuteIcon();
+        }
+
+        function hlsSetVolume(v) {
+            const video = document.getElementById('videoPlayer');
+            video.volume = parseFloat(v);
+            video.muted = parseFloat(v) === 0;
+            hlsSyncMuteIcon();
+        }
+
+        function hlsSyncMuteIcon() {
+            const video = document.getElementById('videoPlayer');
+            const icon = document.getElementById('hls-vol-icon');
+            const muted = video.muted || video.volume === 0;
+            icon.innerHTML = muted
+                ? '<path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2"/>'
+                : '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>';
+        }
+
+        function hlsTogglePip() {
+            const video = document.getElementById('videoPlayer');
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture().catch(() => {});
+            } else if (document.pictureInPictureEnabled) {
+                video.requestPictureInPicture().catch(() => {});
+            }
+        }
+
+        function hlsToggleFullscreen() {
+            const wrap = document.getElementById('player-wrap');
+            if (!document.fullscreenElement) {
+                wrap.requestFullscreen?.().catch(() => {});
+            } else {
+                document.exitFullscreen?.();
+            }
+        }
+
+        function hlsShowControls() {
+            const wrap = document.getElementById('player-wrap');
+            wrap.classList.add('controls-visible');
+            clearTimeout(hlsControlsHideTimer);
+            const video = document.getElementById('videoPlayer');
+            if (!video.paused) {
+                hlsControlsHideTimer = setTimeout(() => {
+                    wrap.classList.remove('controls-visible');
+                    hlsCloseMenus();
+                }, 3000);
+            }
+        }
+
+        function setupAdvancedHlsControls() {
+            const video = document.getElementById('videoPlayer');
+            const wrap = document.getElementById('player-wrap');
+
+            video.addEventListener('click', () => hlsTogglePlay());
+            video.addEventListener('dblclick', () => hlsToggleFullscreen());
+
+            video.addEventListener('play', () => {
+                wrap.classList.add('controls-paused');
+                wrap.classList.remove('controls-paused');
+                document.getElementById('hls-play-icon').innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+                document.getElementById('hls-center-play').classList.remove('show');
+                hlsShowControls();
+            });
+
+            video.addEventListener('pause', () => {
+                document.getElementById('hls-play-icon').innerHTML = '<polygon points="6 3 21 12 6 21 6 3"/>';
+                document.getElementById('hls-center-play').classList.add('show');
+                wrap.classList.add('controls-paused');
+                clearTimeout(hlsControlsHideTimer);
+            });
+
+            video.addEventListener('waiting', () => document.getElementById('hls-buffer-spinner').classList.add('show'));
+            video.addEventListener('playing', () => {
+                document.getElementById('hls-buffer-spinner').classList.remove('show');
+                wrap.classList.remove('controls-paused');
+            });
+            video.addEventListener('canplay', () => document.getElementById('hls-buffer-spinner').classList.remove('show'));
+
+            video.addEventListener('timeupdate', () => {
+                if (!isFinite(video.duration)) {
+                    document.getElementById('hls-live-badge').classList.add('show');
+                    document.getElementById('hls-time').textContent = 'LIVE';
+                    return;
+                }
+                document.getElementById('hls-live-badge').classList.remove('show');
+                const pct = (video.currentTime / video.duration) * 100;
+                document.getElementById('hls-progress').style.width = pct + '%';
+                document.getElementById('hls-time').textContent = `${hlsFormatTime(video.currentTime)} / ${hlsFormatTime(video.duration)}`;
+            });
+
+            video.addEventListener('progress', () => {
+                if (video.buffered.length && isFinite(video.duration)) {
+                    const end = video.buffered.end(video.buffered.length - 1);
+                    document.getElementById('hls-buffered').style.width = ((end / video.duration) * 100) + '%';
+                }
+            });
+
+            video.addEventListener('volumechange', hlsSyncMuteIcon);
+            document.getElementById('hls-vol-slider').addEventListener('input', function () { hlsSetVolume(this.value); });
+
+            document.addEventListener('fullscreenchange', () => {
+                wrap.classList.toggle('is-fullscreen', !!document.fullscreenElement);
+            });
+
+            wrap.addEventListener('mousemove', hlsShowControls);
+            wrap.addEventListener('mouseleave', () => {
+                if (!video.paused) {
+                    clearTimeout(hlsControlsHideTimer);
+                    wrap.classList.remove('controls-visible');
+                    hlsCloseMenus();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.hls-menu-wrap')) hlsCloseMenus();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (video.style.display === 'none') return;
+                const tag = (document.activeElement && document.activeElement.tagName) || '';
+                if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+                switch (e.code) {
+                    case 'Space': e.preventDefault(); hlsTogglePlay(); break;
+                    case 'ArrowRight': hlsSkip(5); break;
+                    case 'ArrowLeft': hlsSkip(-5); break;
+                    case 'ArrowUp': e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); document.getElementById('hls-vol-slider').value = video.volume; break;
+                    case 'ArrowDown': e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); document.getElementById('hls-vol-slider').value = video.volume; break;
+                    case 'KeyM': hlsToggleMute(); break;
+                    case 'KeyF': hlsToggleFullscreen(); break;
+                    case 'KeyP': hlsTogglePip(); break;
+                }
+            });
         }
 
         function renderServerPanel(streams) {
@@ -1582,11 +1930,6 @@
             currentLang = lang;
             const myToken = ++_fetchToken;
 
-            // Kick the proxy awake immediately, in parallel with everything
-            // else below - don't await it, it's just a warm-up nudge so it's
-            // hopefully already awake by the time hls.js needs it.
-            warmupProxy();
-
             document.getElementById('inp-mal').value = malId;
             document.getElementById('inp-ep').value = ep;
             document.getElementById('btn-dub').classList.toggle('active', lang === 'dub');
@@ -1729,7 +2072,7 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            warmupProxy(); // wake the proxy dyno as early as the page itself loads
+            setupAdvancedHlsControls();
             const params = parseParamsFromUrl();
             if (params) {
                 showPlayer(params.malId, params.epNum, params.lang);
