@@ -1094,19 +1094,27 @@
                             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                         </svg>
-                        Paste Stream
+                        Advanced Player
                     </button>
                     <div id="manual-panel">
                         <div class="sp-row">
-                            <span class="sp-title">Paste &amp; Play Any Stream</span>
+                            <span class="sp-title">Advanced HLS / M3U8 Player</span>
                             <button id="manual-close" onclick="toggleManualPanel()">&#10005;</button>
                         </div>
                         <div class="manual-field">
-                            <label>Stream URL (m3u8, proxy url, or embed link)</label>
+                            <label>Stream URL (m3u8 / ts / any video url)</label>
                             <input id="inp-hls-url" type="text"
-                                placeholder="https://anivexa.onrender.com/proxy?url=...&amp;referer=...">
+                                placeholder="https://example.com/master.m3u8">
                         </div>
-                        <button id="manual-load-btn" onclick="loadManualHls()">&#9654; Play Pasted URL</button>
+                        <div class="manual-field">
+                            <label>Origin (optional)</label>
+                            <input id="inp-hls-origin" type="text" placeholder="https://otakuvid.online">
+                        </div>
+                        <div class="manual-field">
+                            <label>Referer (optional)</label>
+                            <input id="inp-hls-referer" type="text" placeholder="https://otakuvid.online/">
+                        </div>
+                        <button id="manual-load-btn" onclick="loadManualHls()">&#9654; Play Stream</button>
                         <div id="manual-error"></div>
                         <div class="manual-field" style="margin-top:10px;">
                             <label>Now Playing URL</label>
@@ -1564,6 +1572,8 @@
 
         function loadManualHls() {
             const urlInput = document.getElementById('inp-hls-url').value.trim();
+            const origin = document.getElementById('inp-hls-origin').value.trim();
+            const referer = document.getElementById('inp-hls-referer').value.trim();
             const errEl = document.getElementById('manual-error');
             errEl.classList.remove('show');
 
@@ -1573,9 +1583,17 @@
                 return;
             }
 
-            // Whatever is pasted — a raw m3u8, a proxy?url=...&referer=... link,
-            // or a direct video url — gets used exactly as-is.
-            const finalUrl = urlInput;
+            // If an Origin or Referer was given, route through the proxy so
+            // those headers get attached; otherwise use the pasted URL as-is
+            // (it may already be a fully-formed / pre-proxied link).
+            let finalUrl = urlInput;
+            if (origin || referer) {
+                const params = new URLSearchParams();
+                params.set('url', urlInput);
+                params.set('referer', referer || origin);
+                if (origin) params.set('origin', origin);
+                finalUrl = `https://anivexa.onrender.com/proxy?${params.toString()}`;
+            }
 
             cancelAutoNext();
             document.getElementById('placeholder').style.display = 'none';
