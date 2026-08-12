@@ -6,36 +6,44 @@
     <title>OtakuVid MegaPlay Player</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
+        /* ═══════════════════════════════════════════
+           BASE / RESET
+        ═══════════════════════════════════════════ */
+        :root {
+            --bg:#0a0a0f; --s1:#13131a; --s2:#1a1a26; --s3:#1e1e2e;
+            --border:#2e2e42; --acc:#7c6dfa; --acc2:#a78bfa;
+            --text:#e2e2e8; --muted:#888; --red:#f87171; --green:#4ade80;
+        }
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        html,body{width:100%;height:100%;background:#0a0a0f;font-family:'Segoe UI',system-ui,sans-serif;color:#e2e2e8;overflow:hidden}
+        html,body{width:100%;height:100%;background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);overflow:hidden}
         #app{display:flex;flex-direction:column;width:100%;height:100%}
 
         /* ── TOP BAR ── */
-        #topbar{position:relative;display:flex;align-items:center;gap:8px;padding:0 14px;background:#13131a;border-bottom:1px solid #222230;flex-shrink:0;flex-wrap:wrap;overflow:visible}
+        #topbar{position:relative;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;overflow:visible}
         #topbar-inner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;max-height:0;overflow:hidden;transition:max-height .28s ease,padding .28s ease;padding:0}
         #topbar-inner.open{max-height:200px;padding:8px 0}
-        .brand{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c6dfa;white-space:nowrap}
+        .brand{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);white-space:nowrap}
         .field-group{display:flex;align-items:center;gap:6px}
-        .field-group label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
-        .field-group input{width:80px;padding:4px 8px;background:#1e1e2e;border:1px solid #2e2e42;border-radius:6px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s}
-        .field-group input:focus{border-color:#7c6dfa}
-        #lang-toggle{display:flex;background:#1e1e2e;border:1px solid #2e2e42;border-radius:8px;overflow:hidden;flex-shrink:0}
-        #lang-toggle button{padding:5px 14px;font-size:12px;font-weight:600;border:none;background:transparent;color:#888;cursor:pointer;transition:background .15s,color .15s}
-        #lang-toggle button.active{background:#7c6dfa;color:#fff}
+        .field-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+        .field-group input{width:80px;padding:4px 8px;background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s}
+        .field-group input:focus{border-color:var(--acc)}
+        #lang-toggle{display:flex;background:var(--s3);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0}
+        #lang-toggle button{padding:5px 14px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+        #lang-toggle button.active{background:var(--acc);color:#fff}
         #autonext-wrap{display:flex;align-items:center;gap:7px;flex-shrink:0}
-        #autonext-wrap span{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+        #autonext-wrap span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
         .switch{position:relative;width:36px;height:20px;flex-shrink:0}
         .switch input{opacity:0;width:0;height:0}
-        .slider{position:absolute;inset:0;background:#2e2e42;border-radius:20px;cursor:pointer;transition:background .2s}
+        .slider{position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;transition:background .2s}
         .slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
-        .switch input:checked+.slider{background:#7c6dfa}
+        .switch input:checked+.slider{background:var(--acc)}
         .switch input:checked+.slider::before{transform:translateX(16px)}
         .ctrl-btns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
         .bar-btn{display:flex;align-items:center;gap:5px;padding:5px 14px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,transform .1s}
         .bar-btn:active{transform:scale(.96)}
-        #btn-prev-bar,#btn-next-bar{background:#1e1e2e;color:#aaa;border:1px solid #2e2e42}
-        #btn-prev-bar:hover,#btn-next-bar:hover{background:rgba(124,109,250,.18);border-color:#7c6dfa;color:#fff}
-        #btn-go{background:#7c6dfa;color:#fff}
+        #btn-prev-bar,#btn-next-bar{background:var(--s3);color:#aaa;border:1px solid var(--border)}
+        #btn-prev-bar:hover,#btn-next-bar:hover{background:rgba(124,109,250,.18);border-color:var(--acc);color:#fff}
+        #btn-go{background:var(--acc);color:#fff}
         #btn-go:hover{background:#6a5be0}
 
         /* ── PLAYER WRAP ── */
@@ -47,161 +55,198 @@
         #placeholder .hint{font-size:12px;color:#333}
 
         /* ── TOGGLE BTN ── */
-        #toggle-bar-btn{position:absolute;top:10px;right:12px;z-index:20;width:32px;height:32px;background:rgba(19,19,26,.85);border:1px solid #2e2e42;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
-        #toggle-bar-btn:hover{background:rgba(40,40,60,.95);border-color:#7c6dfa}
+        #toggle-bar-btn{position:absolute;top:10px;right:12px;z-index:20;width:32px;height:32px;background:rgba(19,19,26,.85);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
+        #toggle-bar-btn:hover{background:rgba(40,40,60,.95);border-color:var(--acc)}
         #toggle-bar-btn svg{display:block;transition:transform .25s ease}
         #toggle-bar-btn.open svg{transform:rotate(180deg)}
 
         /* ── DIRECT PLAY BTN (floating) ── */
-        #direct-play-fab{position:absolute;top:10px;right:52px;z-index:20;height:32px;padding:0 12px;background:rgba(124,109,250,.18);border:1px solid rgba(124,109,250,.5);border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#a78bfa;backdrop-filter:blur(4px);transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
-        #direct-play-fab:hover{background:rgba(124,109,250,.32);border-color:#7c6dfa;color:#fff}
+        #direct-play-fab{position:absolute;top:10px;right:52px;z-index:20;height:32px;padding:0 12px;background:rgba(124,109,250,.18);border:1px solid rgba(124,109,250,.5);border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--acc2);backdrop-filter:blur(4px);transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
+        #direct-play-fab:hover{background:rgba(124,109,250,.32);border-color:var(--acc);color:#fff}
         #direct-play-fab svg{flex-shrink:0}
 
         /* ── SERVER PANEL ── */
         #srv-wrap{position:relative;margin-left:auto;flex-shrink:0}
-        #srv-toggle-btn{display:none;align-items:center;gap:6px;padding:5px 14px;background:#1e1e2e;border:1px solid #2e2e42;border-radius:8px;color:#aaa;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+        #srv-toggle-btn{display:none;align-items:center;gap:6px;padding:5px 14px;background:var(--s3);border:1px solid var(--border);border-radius:8px;color:#aaa;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
         #srv-toggle-btn.show{display:flex}
-        #srv-toggle-btn:hover,#srv-toggle-btn.open{border-color:#7c6dfa;color:#fff;background:rgba(124,109,250,.18)}
-        #server-panel{position:absolute;top:calc(100% + 6px);right:0;z-index:100;background:#13131a;border:1px solid #2e2e42;border-radius:12px;padding:12px 14px;min-width:260px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
+        #srv-toggle-btn:hover,#srv-toggle-btn.open{border-color:var(--acc);color:#fff;background:rgba(124,109,250,.18)}
+        #server-panel{position:absolute;top:calc(100% + 6px);right:0;z-index:100;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 14px;min-width:260px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
         #server-panel.visible{display:block}
         .sp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-        .sp-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.07em}
+        .sp-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
         #sp-close{background:none;border:none;color:#666;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
         #sp-close:hover{color:#aaa}
         #quality-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-        .q-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #2e2e42;background:#1e1e2e;color:#888;transition:all .15s}
-        .q-pill.active{background:#7c6dfa;border-color:#7c6dfa;color:#fff}
-        .q-pill:hover:not(.active):not(.unavail){border-color:#7c6dfa;color:#ccc}
+        .q-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--s3);color:var(--muted);transition:all .15s}
+        .q-pill.active{background:var(--acc);border-color:var(--acc);color:#fff}
+        .q-pill:hover:not(.active):not(.unavail){border-color:var(--acc);color:#ccc}
         .q-pill.unavail{opacity:.3;cursor:default;pointer-events:none}
         #server-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto}
         #server-list::-webkit-scrollbar{width:4px}
         #server-list::-webkit-scrollbar-track{background:transparent}
-        #server-list::-webkit-scrollbar-thumb{background:#2e2e42;border-radius:4px}
-        .srv-btn{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;border:1px solid #2e2e42;background:#1a1a26;color:#ccc;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:left;width:100%}
-        .srv-btn:hover{background:rgba(124,109,250,.18);border-color:#7c6dfa;color:#fff}
-        .srv-btn.active{background:rgba(124,109,250,.28);border-color:#7c6dfa;color:#fff}
-        .srv-badge{font-size:10px;padding:2px 6px;border-radius:10px;background:#2e2e42;color:#777;margin-left:6px;flex-shrink:0}
-        .srv-btn.active .srv-badge{background:#7c6dfa;color:#fff}
+        #server-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+        .srv-btn{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:#1a1a26;color:#ccc;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:left;width:100%}
+        .srv-btn:hover{background:rgba(124,109,250,.18);border-color:var(--acc);color:#fff}
+        .srv-btn.active{background:rgba(124,109,250,.28);border-color:var(--acc);color:#fff}
+        .srv-badge{font-size:10px;padding:2px 6px;border-radius:10px;background:var(--border);color:#777;margin-left:6px;flex-shrink:0}
+        .srv-btn.active .srv-badge{background:var(--acc);color:#fff}
         #sp-loading{display:flex;align-items:center;gap:8px;color:#666;font-size:12px;padding:8px 0}
-        .spin{width:14px;height:14px;border:2px solid #2e2e42;border-top-color:#7c6dfa;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+        .spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
         @keyframes spin{to{transform:rotate(360deg)}}
-        #sp-error{color:#f87171;font-size:12px;padding:4px 0}
+        #sp-error{color:var(--red);font-size:12px;padding:4px 0}
 
         /* ── AUTO-NEXT ── */
-        #autonext-overlay{display:none;position:absolute;bottom:28px;right:28px;background:rgba(10,10,15,.9);border:1px solid #2e2e42;border-radius:14px;padding:14px 20px;min-width:220px;z-index:30;backdrop-filter:blur(6px)}
-        .an-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
-        .an-ep{font-size:15px;font-weight:700;color:#e2e2e8;margin-bottom:10px}
-        #an-bar-bg{width:100%;height:4px;background:#2e2e42;border-radius:4px;overflow:hidden;margin-bottom:10px}
-        #an-bar{height:100%;width:100%;background:#7c6dfa;border-radius:4px;transform-origin:left;transition:transform linear}
+        #autonext-overlay{display:none;position:absolute;bottom:28px;right:28px;background:rgba(10,10,15,.9);border:1px solid var(--border);border-radius:14px;padding:14px 20px;min-width:220px;z-index:30;backdrop-filter:blur(6px)}
+        .an-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+        .an-ep{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px}
+        #an-bar-bg{width:100%;height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px}
+        #an-bar{height:100%;width:100%;background:var(--acc);border-radius:4px;transform-origin:left;transition:transform linear}
         .an-btns{display:flex;gap:8px}
         .an-btns button{flex:1;padding:6px 0;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
-        #an-btn-now{background:#7c6dfa;color:#fff}
+        #an-btn-now{background:var(--acc);color:#fff}
         #an-btn-now:hover{background:#6a5be0}
-        #an-btn-cancel{background:#1e1e2e;color:#aaa;border:1px solid #2e2e42}
-        #an-btn-cancel:hover{background:#2e2e42}
+        #an-btn-cancel{background:var(--s3);color:#aaa;border:1px solid var(--border)}
+        #an-btn-cancel:hover{background:var(--border)}
 
-        /* ══════════════════════════════════════════
-           DIRECT STREAM MODAL
-        ══════════════════════════════════════════ */
-        #direct-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
-        #direct-modal-overlay.open{display:flex}
-        #direct-modal{background:#13131a;border:1px solid #2e2e42;border-radius:16px;padding:24px 26px;width:min(560px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.7);position:relative}
-        #direct-modal::-webkit-scrollbar{width:4px}
-        #direct-modal::-webkit-scrollbar-thumb{background:#2e2e42;border-radius:4px}
-        .dm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-        .dm-title{font-size:15px;font-weight:700;color:#e2e2e8;display:flex;align-items:center;gap:8px}
-        .dm-title svg{color:#7c6dfa}
-        #dm-close{background:none;border:none;color:#666;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;border-radius:6px;transition:color .15s,background .15s}
-        #dm-close:hover{color:#e2e2e8;background:#2e2e42}
+        /* prefetch/extract status */
+        #prefetch-status{display:none;align-items:center;gap:5px;color:var(--green);font-size:12px;font-weight:600;background:rgba(74,222,128,0.12);padding:5px 12px;border-radius:8px;border:1px solid rgba(74,222,128,0.25)}
+        #extract-spinner{display:none;align-items:center;gap:6px;color:var(--acc2);font-size:12px;font-weight:600;background:rgba(167,139,250,0.12);padding:5px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.25)}
 
-        /* section label */
-        .dm-section{margin-bottom:16px}
-        .dm-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-        .dm-label-badge{font-size:10px;padding:1px 7px;border-radius:10px;background:#7c6dfa22;color:#7c6dfa;border:1px solid #7c6dfa44;text-transform:none;letter-spacing:0;font-weight:600}
+        /* ══════════════════════════════════════════════════════════
+           MEGAPLAYER MODAL  — full player embedded
+        ══════════════════════════════════════════════════════════ */
+        #mega-overlay{
+            position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;
+            display:none;align-items:center;justify-content:center;
+            backdrop-filter:blur(8px);padding:12px;
+        }
+        #mega-overlay.open{display:flex}
+        #mega-modal{
+            background:#0d0d0f;border:1px solid #2a2a35;border-radius:16px;
+            width:min(860px,100%);max-height:96vh;overflow-y:auto;
+            box-shadow:0 24px 80px rgba(0,0,0,.85);position:relative;
+            display:flex;flex-direction:column;
+        }
+        #mega-modal::-webkit-scrollbar{width:4px}
+        #mega-modal::-webkit-scrollbar-thumb{background:#2a2a35;border-radius:4px}
 
-        /* URL row */
-        .dm-url-row{display:flex;gap:6px;align-items:stretch}
-        .dm-url-row input{flex:1;padding:8px 12px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s;font-family:monospace}
-        .dm-url-row input:focus{border-color:#7c6dfa}
-        .dm-url-row input::placeholder{color:#444;font-family:'Segoe UI',system-ui,sans-serif}
-        .dm-url-row button{padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,transform .1s}
-        .dm-url-row button:active{transform:scale(.96)}
-        #dm-btn-paste{background:#1e1e2e;border:1px solid #2e2e42;color:#aaa}
-        #dm-btn-paste:hover{border-color:#7c6dfa;color:#a78bfa;background:rgba(124,109,250,.12)}
+        /* ── MegaPlayer header inside modal ── */
+        .mp-header{
+            display:flex;align-items:center;gap:10px;
+            padding:10px 16px;background:#18181c;
+            border-bottom:1px solid #2a2a35;border-radius:16px 16px 0 0;flex-shrink:0;
+        }
+        .mp-logo{font-size:1.1rem;font-weight:800;letter-spacing:-.5px}
+        .mp-logo span{color:#a78bfa}
+        .mp-badge{font-size:.55rem;background:#7c5cfc;color:#fff;padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:1px}
+        #mega-close{margin-left:auto;background:none;border:none;color:#666;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;transition:color .15s,background .15s}
+        #mega-close:hover{color:var(--text);background:#2a2a35}
 
-        /* proxy indicator */
-        #proxy-status-row{margin-top:6px;display:flex;align-items:center;gap:8px;min-height:20px}
-        #proxy-status-dot{width:8px;height:8px;border-radius:50%;background:#2e2e42;flex-shrink:0;transition:background .3s}
-        #proxy-status-dot.active{background:#4ade80}
-        #proxy-status-dot.proxied{background:#facc15}
-        #proxy-status-dot.error{background:#f87171}
-        #proxy-status-text{font-size:11px;color:#666}
+        /* ── Video section ── */
+        .mp-vwrap{
+            position:relative;background:#000;width:100%;
+            aspect-ratio:16/9;max-height:52vh;flex-shrink:0;
+        }
+        .mp-vwrap video{width:100%;height:100%;display:block;background:#000}
+        #mp-iframeWrap{display:none;position:absolute;inset:0;background:#000}
+        #mp-iframeWrap iframe{width:100%;height:100%;border:none;display:block}
+        .mp-iframe-badge{
+            position:absolute;top:8px;left:8px;z-index:10;
+            background:rgba(124,92,252,.85);color:#fff;
+            font-size:.58rem;font-weight:700;letter-spacing:.8px;
+            padding:3px 9px;border-radius:20px;pointer-events:none;
+        }
 
-        /* proxy config */
-        .dm-proxy-row{display:flex;gap:6px;margin-top:6px}
-        .dm-proxy-row input{flex:1;padding:7px 10px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:12px;outline:none;transition:border-color .15s;font-family:monospace}
-        .dm-proxy-row input:focus{border-color:#7c6dfa}
-        .dm-proxy-row input::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
-        #dm-proxy-toggle{padding:7px 14px;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;background:#1e1e2e;border:1px solid #2e2e42;color:#888;transition:all .15s}
-        #dm-proxy-toggle.on{background:rgba(124,109,250,.18);border-color:#7c6dfa;color:#a78bfa}
+        /* ── Controls overlay ── */
+        .mp-overlay{
+            position:absolute;bottom:0;left:0;right:0;
+            background:linear-gradient(transparent,rgba(0,0,0,.92));
+            padding:36px 14px 10px;
+            opacity:0;transition:opacity .2s;pointer-events:none;
+        }
+        .mp-vwrap:hover .mp-overlay,
+        .mp-vwrap.paused .mp-overlay{opacity:1;pointer-events:all}
+        .mp-vwrap.iframe-mode .mp-overlay{display:none!important}
 
-        /* headers */
-        .dm-headers-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-        .dm-header-row{display:flex;gap:6px;align-items:center}
-        .dm-header-row input{flex:1;padding:6px 10px;background:#1a1a26;border:1px solid #2e2e42;border-radius:7px;color:#e2e2e8;font-size:12px;outline:none;transition:border-color .15s;font-family:monospace}
-        .dm-header-row input:focus{border-color:#7c6dfa}
-        .dm-header-row input::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
-        .dm-header-row .key-inp{width:130px;flex:none}
-        .dm-remove-hdr{background:none;border:none;color:#555;cursor:pointer;font-size:16px;line-height:1;padding:0 4px;border-radius:4px;transition:color .15s}
-        .dm-remove-hdr:hover{color:#f87171}
-        #dm-add-header{display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px dashed #2e2e42;border-radius:7px;background:none;color:#666;font-size:12px;cursor:pointer;transition:all .15s;margin-top:2px;width:100%;justify-content:center}
-        #dm-add-header:hover{border-color:#7c6dfa;color:#a78bfa;background:rgba(124,109,250,.07)}
+        /* Seek bar */
+        .mp-seek{position:relative;height:4px;background:rgba(255,255,255,.2);border-radius:4px;cursor:pointer;margin-bottom:10px;transition:height .15s}
+        .mp-seek:hover{height:6px}
+        .mp-seek-buf{position:absolute;top:0;height:100%;background:rgba(255,255,255,.25);border-radius:4px;pointer-events:none}
+        .mp-seek-prog{position:absolute;top:0;height:100%;background:#7c5cfc;border-radius:4px;pointer-events:none}
+        .mp-seek-thumb{position:absolute;top:50%;width:13px;height:13px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .15s}
+        .mp-seek:hover .mp-seek-thumb{opacity:1}
 
-        /* origin */
-        #dm-origin-inp{width:100%;padding:8px 12px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s;font-family:monospace}
-        #dm-origin-inp:focus{border-color:#7c6dfa}
-        #dm-origin-inp::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
+        /* Control row */
+        .mp-crow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+        .mp-cb{background:none;border:none;color:#fff;cursor:pointer;font-size:.95rem;padding:4px 6px;border-radius:6px;line-height:1;transition:background .15s;white-space:nowrap}
+        .mp-cb:hover{background:rgba(255,255,255,.15)}
+        .mp-time{font-size:.72rem;color:rgba(255,255,255,.85);white-space:nowrap}
+        .mp-sp{flex:1}
+        select.mp-cs{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.68rem;padding:3px 5px;border-radius:6px;cursor:pointer}
 
-        /* referer */
-        #dm-referer-inp{width:100%;padding:8px 12px;background:#1a1a26;border:1px solid #2e2e42;border-radius:8px;color:#e2e2e8;font-size:13px;outline:none;transition:border-color .15s;font-family:monospace}
-        #dm-referer-inp:focus{border-color:#7c6dfa}
-        #dm-referer-inp::placeholder{color:#333;font-family:'Segoe UI',system-ui,sans-serif}
+        /* ── Panel (controls below video) ── */
+        .mp-panel{background:#1e1e24;border-top:1px solid #2a2a35;padding:14px 16px;flex-shrink:0}
+        .mp-plabel{font-size:.63rem;color:#7777aa;font-weight:700;letter-spacing:.5px;margin-bottom:5px}
+        .mp-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+        input.mp-fi{
+            flex:1;min-width:0;background:#18181c;border:1px solid #2a2a35;
+            color:#f0f0f5;padding:7px 11px;border-radius:7px;font-size:.81rem;
+            outline:none;transition:border .15s;width:100%;
+        }
+        input.mp-fi:focus{border-color:#7c5cfc}
+        .mp-btn{background:#7c5cfc;border:none;color:#fff;padding:7px 15px;border-radius:7px;cursor:pointer;font-weight:700;font-size:.81rem;white-space:nowrap;transition:opacity .15s;flex-shrink:0}
+        .mp-btn:hover{opacity:.85}
+        .mp-btn.sec{background:#18181c;border:1px solid #2a2a35;color:#f0f0f5}
+        .mp-btn.sec:hover{border-color:#7c5cfc;color:#a78bfa}
 
-        /* play btn */
-        #dm-play-btn{width:100%;padding:11px;background:linear-gradient(135deg,#7c6dfa,#5b4be8);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s;margin-top:18px;letter-spacing:.02em}
-        #dm-play-btn:hover{opacity:.9}
-        #dm-play-btn:active{transform:scale(.98)}
-        #dm-play-btn .spin-sm{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
-        #dm-play-btn.loading .spin-sm{display:block}
-        #dm-play-btn.loading .play-icon{display:none}
+        /* Proxy row */
+        .mp-proxy-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px}
+        .mp-proxy-row > div{flex:1;min-width:140px}
+        select.mp-fi-sel{width:100%;background:#18181c;border:1px solid #2a2a35;color:#f0f0f5;padding:7px 10px;border-radius:7px;font-size:.78rem;outline:none;cursor:pointer;transition:border .15s}
+        select.mp-fi-sel:focus{border-color:#7c5cfc}
+        #mp-customExtra{display:none}
 
-        /* quick presets */
-        .dm-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-        .dm-preset-btn{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #2e2e42;background:#1e1e2e;color:#888;transition:all .15s}
-        .dm-preset-btn:hover{border-color:#7c6dfa;color:#a78bfa;background:rgba(124,109,250,.1)}
+        /* Status */
+        .mp-statusrow{display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap}
+        .mp-status{font-size:.74rem;color:#7777aa;flex:1;min-height:16px}
 
-        /* error toast inside modal */
-        #dm-error{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#f87171;display:none;margin-top:10px}
+        /* Saved rules */
+        .mp-rules-wrap{margin-top:10px;border-top:1px solid #2a2a35;padding-top:10px}
+        .mp-rules-title{font-size:.63rem;color:#7777aa;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
+        #mp-savedRules{max-height:100px;overflow-y:auto}
+        .mp-rule-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #2a2a35}
+        .mp-rule-item:last-child{border-bottom:none}
+        .mp-rule-info{flex:1;min-width:0}
+        .mp-rule-host{font-size:.72rem;color:#f0f0f5;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .mp-rule-ref{font-size:.62rem;color:#7777aa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .mp-rule-del{background:none;border:1px solid #2a2a35;color:#ff5555;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:.62rem;flex-shrink:0}
 
-        /* divider */
-        .dm-divider{border:none;border-top:1px solid #1e1e2e;margin:14px 0}
+        /* Sandbox toggle */
+        .mp-iopt{display:inline-flex;align-items:center;gap:5px;font-size:.62rem;color:#7777aa;cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid #2a2a35;background:#18181c;transition:border .15s,color .15s,background .15s;user-select:none;white-space:nowrap;margin-left:auto}
+        .mp-iopt input[type=checkbox]{display:none}
+        .mp-iopt:hover{border-color:#7c5cfc;color:#f0f0f5}
+        .mp-iopt.active{border-color:#7c5cfc;color:#a78bfa;background:rgba(124,92,252,.13)}
+        .mp-iopt.active .mp-iopt-dot{background:#a78bfa}
+        .mp-iopt-dot{width:6px;height:6px;border-radius:50%;background:#2a2a35;flex-shrink:0;transition:background .15s}
+        .mp-url-labelrow{display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap}
 
-        /* spinner extras in prefetch */
-        #prefetch-status{display:none;align-items:center;gap:5px;color:#4ade80;font-size:12px;font-weight:600;background:rgba(74,222,128,0.12);padding:5px 12px;border-radius:8px;border:1px solid rgba(74,222,128,0.25)}
-        #extract-spinner{display:none;align-items:center;gap:6px;color:#a78bfa;font-size:12px;font-weight:600;background:rgba(167,139,250,0.12);padding:5px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.25)}
+        /* URL type badge */
+        #mp-urlTypeBadge{display:none;font-size:.6rem;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:20px;border:1px solid #2a2a35;background:#18181c;color:#7777aa}
 
-        /* currently playing banner inside modal */
-        #dm-now-playing{background:rgba(124,109,250,.1);border:1px solid rgba(124,109,250,.25);border-radius:8px;padding:9px 12px;display:none;margin-bottom:14px}
-        #dm-now-playing-label{font-size:10px;color:#7c6dfa;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:4px}
-        #dm-now-playing-url{font-size:11px;color:#aaa;font-family:monospace;word-break:break-all;line-height:1.5}
+        /* scrollbars inside modal */
+        #mega-modal::-webkit-scrollbar{width:4px}
+        #mega-modal ::-webkit-scrollbar{width:4px}
+        #mega-modal ::-webkit-scrollbar-thumb{background:#2a2a35;border-radius:3px}
 
-        /* collapse toggle for advanced */
-        .dm-collapse-btn{display:flex;align-items:center;gap:5px;font-size:11px;color:#666;background:none;border:none;cursor:pointer;padding:0;transition:color .15s}
-        .dm-collapse-btn:hover{color:#a78bfa}
-        .dm-collapse-btn svg{transition:transform .2s}
-        .dm-collapse-btn.open svg{transform:rotate(180deg)}
-        .dm-collapsible{max-height:0;overflow:hidden;transition:max-height .25s ease}
-        .dm-collapsible.open{max-height:600px}
+        /* ── Responsive ── */
+        @media(max-width:600px){
+            .mp-panel{padding:10px 12px}
+            .mp-crow{gap:4px}
+            .mp-cb{font-size:.85rem;padding:3px 5px}
+            .mp-time{font-size:.65rem}
+            select.mp-cs{font-size:.62rem;padding:2px 4px}
+            .mp-proxy-row>div{min-width:100%}
+        }
     </style>
 </head>
 <body>
@@ -280,10 +325,10 @@
     <!-- ── PLAYER ── -->
     <div id="player-wrap">
 
-        <!-- Floating FAB: Direct Stream -->
-        <button id="direct-play-fab" onclick="openDirectModal()" title="Play any HLS / M3U8 stream directly">
+        <!-- Floating FAB: MegaPlayer Direct Stream -->
+        <button id="direct-play-fab" onclick="openMegaPlayer()" title="MegaPlayer — play any HLS / M3U8 / MP4 stream">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            Direct Stream
+            MegaPlayer
         </button>
 
         <!-- Topbar toggle -->
@@ -297,7 +342,7 @@
                 <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
             </svg>
             <p>Click &#8964; top-right to open controls</p>
-            <p class="hint">Enter MAL ID + Episode — or click <strong style="color:#a78bfa">Direct Stream</strong> to play any M3U8 / HLS URL</p>
+            <p class="hint">Enter MAL ID + Episode — or click <strong style="color:#a78bfa">MegaPlayer</strong> to play any M3U8 / HLS / MP4 URL</p>
         </div>
 
         <video id="videoPlayer" controls autoplay style="display:none;"></video>
@@ -316,109 +361,150 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════
-     DIRECT STREAM MODAL
+     MEGAPLAYER MODAL
 ════════════════════════════════════════════════════ -->
-<div id="direct-modal-overlay" onclick="overlayClickClose(event)">
-    <div id="direct-modal">
+<div id="mega-overlay" onclick="megaOverlayClose(event)">
+    <div id="mega-modal">
 
-        <div class="dm-header">
-            <div class="dm-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Direct Stream Player
-            </div>
-            <button id="dm-close" onclick="closeDirectModal()">&#10005;</button>
+        <!-- MegaPlayer Header -->
+        <div class="mp-header">
+            <div class="mp-logo">Mega<span>Player</span></div>
+            <div class="mp-badge">HLS · MP4 · IFRAME</div>
+            <button id="mega-close" onclick="closeMegaPlayer()">&#10005;</button>
         </div>
 
-        <!-- Currently playing banner -->
-        <div id="dm-now-playing">
-            <div id="dm-now-playing-label">▶ Now Playing</div>
-            <div id="dm-now-playing-url"></div>
+        <!-- Video Area -->
+        <div class="mp-vwrap" id="mp-vwrap">
+            <video id="mp-vid" preload="metadata"></video>
+            <div id="mp-iframeWrap">
+                <div class="mp-iframe-badge">IFRAME</div>
+                <iframe id="mp-iframePlayer"
+                    allowfullscreen
+                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation">
+                </iframe>
+            </div>
+            <div class="mp-overlay">
+                <div class="mp-seek" id="mp-seek">
+                    <div class="mp-seek-buf"  id="mp-sbuf"  style="width:0"></div>
+                    <div class="mp-seek-prog" id="mp-sprog" style="width:0"></div>
+                    <div class="mp-seek-thumb" id="mp-sthumb" style="left:0"></div>
+                </div>
+                <div class="mp-crow">
+                    <button class="mp-cb" id="mp-bplay">▶</button>
+                    <button class="mp-cb" id="mp-bback" title="-10s">⏪</button>
+                    <button class="mp-cb" id="mp-bfwd"  title="+10s">⏩</button>
+                    <button class="mp-cb" id="mp-bmute">🔊</button>
+                    <input type="range" id="mp-vol" min="0" max="1" step="0.05" value="1"
+                        style="width:60px;accent-color:#7c5cfc;cursor:pointer">
+                    <span class="mp-time" id="mp-tdisp">0:00 / 0:00</span>
+                    <div class="mp-sp"></div>
+                    <select class="mp-cs" id="mp-speed">
+                        <option value=".5">.5x</option><option value=".75">.75x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.25">1.25x</option><option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                    <select class="mp-cs" id="mp-qual"><option value="-1">Auto</option></select>
+                    <button class="mp-cb" id="mp-bpip" title="Picture-in-Picture">⧉</button>
+                    <button class="mp-cb" id="mp-bfs"  title="Fullscreen">⛶</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Stream URL -->
-        <div class="dm-section">
-            <div class="dm-label">
-                Stream URL
-                <span class="dm-label-badge">HLS · M3U8 · MP4 · any</span>
+        <!-- Panel -->
+        <div class="mp-panel">
+
+            <!-- Stream URL row -->
+            <div class="mp-url-labelrow">
+                <div class="mp-plabel" style="margin-bottom:0">STREAM URL</div>
+                <span id="mp-urlTypeBadge"></span>
+                <label class="mp-iopt" id="mp-optSandbox" title="Enable iframe sandbox — blocks ads, popups &amp; redirects">
+                    <input type="checkbox" id="mp-chkSandbox" onchange="mpOnSandboxChange()">
+                    <span class="mp-iopt-dot"></span>🛡 Sandbox
+                </label>
             </div>
-            <div class="dm-url-row">
-                <input id="dm-url-inp" type="text" placeholder="https://example.com/stream.m3u8 — paste or auto-detected from clipboard" autocomplete="off" spellcheck="false">
-                <button id="dm-btn-paste" onclick="pasteFromClipboard()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-                    Paste
+            <div class="mp-row">
+                <input class="mp-fi" id="mp-urlIn" type="text" placeholder="Paste m3u8, mp4, or any stream URL…">
+                <button class="mp-btn" onclick="mpLoadFromInput()">▶ Play</button>
+            </div>
+
+            <!-- Also send to main player -->
+            <div class="mp-row" style="margin-bottom:4px">
+                <button class="mp-btn sec" onclick="mpSendToMainPlayer()" title="Play this URL in the main OtakuVid player below">
+                    ⬆ Send to Main Player
                 </button>
             </div>
-            <div id="proxy-status-row">
-                <div id="proxy-status-dot"></div>
-                <span id="proxy-status-text">Enter a stream URL to begin</span>
+
+            <!-- Referer + Origin -->
+            <div class="mp-row">
+                <div style="flex:1;min-width:140px">
+                    <div class="mp-plabel">REFERER</div>
+                    <input class="mp-fi" id="mp-refIn" type="text" placeholder="https://megaplay.buzz/">
+                </div>
+                <div style="flex:1;min-width:140px">
+                    <div class="mp-plabel">ORIGIN</div>
+                    <input class="mp-fi" id="mp-origIn" type="text" placeholder="https://megaplay.buzz">
+                </div>
             </div>
-        </div>
 
-        <!-- Proxy config -->
-        <div class="dm-section">
-            <div class="dm-label" style="justify-content:space-between">
-                <span>Proxy</span>
-                <button id="dm-proxy-toggle" onclick="toggleProxyMode()" title="Enable / disable CORS proxy wrap">OFF</button>
+            <!-- Proxy mode -->
+            <div class="mp-proxy-row">
+                <div>
+                    <div class="mp-plabel">PROXY MODE</div>
+                    <select class="mp-fi-sel" id="mp-proxyMode" onchange="mpOnProxyModeChange()">
+                        <option value="local">🖥️ Local Proxy (Python server)</option>
+                        <option value="custom">🌐 Custom Proxy (foxy-doxy / external)</option>
+                        <option value="direct" selected>⚡ Direct (no proxy)</option>
+                    </select>
+                </div>
             </div>
-            <div class="dm-proxy-row">
-                <input id="dm-proxy-inp" type="text" placeholder="Proxy base URL — e.g. https://anivexa.onrender.com/proxy?url=" autocomplete="off" spellcheck="false">
+
+            <!-- Custom proxy extra -->
+            <div id="mp-customExtra">
+                <div class="mp-row">
+                    <div style="flex:2;min-width:180px">
+                        <div class="mp-plabel">CUSTOM PROXY BASE URL</div>
+                        <input class="mp-fi" id="mp-customProxyUrl" type="text"
+                            value="https://foxy-doxy.andruilsyestems.workers.dev/proxy">
+                    </div>
+                    <div style="flex:1;min-width:140px">
+                        <div class="mp-plabel">FORMAT</div>
+                        <select class="mp-fi-sel" id="mp-proxyFormat">
+                            <option value="foxy">foxy-doxy (?url=B64&amp;headers=B64)</option>
+                            <option value="plain">Plain (?url=ENC&amp;referer=ENC)</option>
+                            <option value="cors">CORS-anywhere (prepend)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div class="dm-presets">
-                <button class="dm-preset-btn" onclick="setProxyPreset('anivexa')">Anivexa</button>
-                <button class="dm-preset-btn" onclick="setProxyPreset('allorigins')">AllOrigins</button>
-                <button class="dm-preset-btn" onclick="setProxyPreset('corsproxy')">CORSProxy.io</button>
-                <button class="dm-preset-btn" onclick="setProxyPreset('codetabs')">Codetabs</button>
-                <button class="dm-preset-btn" onclick="setProxyPreset('custom')">Custom…</button>
-            </div>
-        </div>
 
-        <hr class="dm-divider">
-
-        <!-- Advanced: origin / referer / headers -->
-        <div class="dm-section">
-            <button class="dm-collapse-btn" id="adv-toggle" onclick="toggleAdvanced()">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                Advanced — Origin, Referer &amp; Custom Headers
-            </button>
-            <div class="dm-collapsible" id="adv-section">
-                <div style="height:12px"></div>
-
-                <!-- Origin -->
-                <div class="dm-label" style="margin-bottom:6px">Origin</div>
-                <input id="dm-origin-inp" type="text" placeholder="https://your-site.com (sent as Origin header)" autocomplete="off" spellcheck="false">
-                <div style="height:10px"></div>
-
-                <!-- Referer -->
-                <div class="dm-label" style="margin-bottom:6px">Referer</div>
-                <input id="dm-referer-inp" type="text" placeholder="https://your-site.com/page (sent as Referer header)" autocomplete="off" spellcheck="false">
-                <div style="height:10px"></div>
-
-                <!-- Custom Headers -->
-                <div class="dm-label" style="margin-bottom:6px">Custom Headers</div>
-                <div class="dm-headers-list" id="dm-headers-list"></div>
-                <button id="dm-add-header" onclick="addHeaderRow()">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add Header
+            <!-- Status + Save rule -->
+            <div class="mp-statusrow">
+                <div class="mp-status" id="mp-status">Ready — paste an m3u8, mp4, or stream URL above</div>
+                <button class="mp-btn sec" onclick="mpSaveCurrentRule()"
+                    style="font-size:.68rem;padding:5px 10px" title="Save Referer+Origin for this CDN">
+                    💾 Save Rule
                 </button>
             </div>
-        </div>
 
-        <div id="dm-error"></div>
-        <button id="dm-play-btn" onclick="directPlay()">
-            <div class="spin-sm"></div>
-            <svg class="play-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Play Stream
-        </button>
-    </div>
-</div>
+            <!-- Saved rules -->
+            <div class="mp-rules-wrap">
+                <div class="mp-rules-title">SAVED RULES <span id="mp-rulesCount" style="color:#a78bfa"></span></div>
+                <div id="mp-savedRules"></div>
+            </div>
+
+        </div><!-- end mp-panel -->
+    </div><!-- end mega-modal -->
+</div><!-- end mega-overlay -->
 
 <!-- ════════════════════════════════════════════════════
      SCRIPT
 ════════════════════════════════════════════════════ -->
 <script>
-/* ─────────────────────────────────────────────
-   CONSTANTS & STATE
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — CONSTANTS & STATE
+═══════════════════════════════════════════════════════════ */
 const BASE_DATASET_URL  = "https://raw.githubusercontent.com/srtfile/hi_anime_streams_scraper/refs/heads/main/";
 const DATASET_FILENAMES = ["hianime_streams_list.json"].concat(
     Array.from({length:36},(_,i)=>`hianime_streams_list_${i+2}.json`)
@@ -431,28 +517,74 @@ const PROXY_PRESETS = {
     codetabs:  'https://api.codetabs.com/v1/proxy?quest=',
 };
 
-let datasetCache     = null;
-let hlsInstance      = null;
-let currentLang      = 'dub';
-let autoNextTimer    = null;
-let activeServerStream = null;
-let allExtractedStreams = [];
-let cachedMalId      = null;
-let cachedEp         = null;
-let _fetchToken      = 0;
-const COUNTDOWN_S    = 10;
+let datasetCache        = null;
+let hlsInstance         = null;   // HLS for the main OtakuVid player
+let currentLang         = 'dub';
+let autoNextTimer       = null;
+let activeServerStream  = null;
+let allExtractedStreams  = [];
+let cachedMalId         = null;
+let cachedEp            = null;
+let _fetchToken         = 0;
+const COUNTDOWN_S       = 10;
+const streamCache       = new Map();
+let preFetchAbortToken  = 0;
 
-const streamCache    = new Map();
-let preFetchAbortToken = 0;
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — CONSTANTS & STATE  (all prefixed mp_)
+═══════════════════════════════════════════════════════════ */
+let mp_hls  = null;   // HLS instance owned by MegaPlayer
+let mp_scrub = false;
 
-// Direct player state
-let dmProxyEnabled   = false;
-let dmCurrentUrl     = ''; // what is actually playing right now via direct mode
-let dmUrlChangeTimer = null;
+// Built-in CDN rules (for auto-fill Referer/Origin)
+const MP_KNOWN_RULES = [
+    { cdn:['cdn.mewstream.buzz','mewstream.buzz','voltara.click','lostproject.club'],
+      ref:'https://megaplay.buzz/', origin:'https://megaplay.buzz', label:'MegaPlay' },
+    { cdn:['gogocdn.net','cdn.gogocdn.net','gogoanime'],
+      ref:'https://gogoanime.me.uk/', origin:'https://gogoanime.me.uk', label:'GogoAnime' },
+    { cdn:['megacloud.tv','rapid-cloud.co','megacloud.store'],
+      ref:'https://aniwatch.to/', origin:'https://aniwatch.to', label:'AniWatch/Zoro' },
+    { cdn:['9anime','vidstream','mcloud.to'],
+      ref:'https://9anime.to/', origin:'https://9anime.to', label:'9Anime' },
+    { cdn:['crunchyroll.com','vrv.co'],
+      ref:'https://www.crunchyroll.com/', origin:'https://www.crunchyroll.com', label:'Crunchyroll' },
+    { cdn:['video-edge','twitch.tv','twitchsvc.net'],
+      ref:'https://www.twitch.tv/', origin:'https://www.twitch.tv', label:'Twitch' },
+    { cdn:['dailymotion.com','dmcdn.net'],
+      ref:'https://www.dailymotion.com/', origin:'https://www.dailymotion.com', label:'Dailymotion' },
+    { cdn:['streamtape.com','streamtape.net'],
+      ref:'https://streamtape.com/', origin:'https://streamtape.com', label:'Streamtape' },
+    { cdn:['dood.','doodstream.com','ds2play.com'],
+      ref:'https://doodstream.com/', origin:'https://doodstream.com', label:'DoodStream' },
+    { cdn:['filemoon.sx','filemoon.in'],
+      ref:'https://filemoon.sx/', origin:'https://filemoon.sx', label:'FileMoon' },
+    { cdn:['vizcloud','vidcloud','mcloud'],
+      ref:'https://vidcloud.co/', origin:'https://vidcloud.co', label:'VidCloud' },
+];
 
-/* ─────────────────────────────────────────────
-   PROXY UTILS
-───────────────────────────────────────────── */
+const MP_LS_KEY = 'megaplayer_url_rules';
+let mp_profileCache = null;
+
+// URL type badges
+const MP_URL_TYPES = {
+    hls:    { label:'📡 HLS',     color:'#4ade80', border:'#4ade80' },
+    txt:    { label:'📡 HLS·TXT', color:'#4ade80', border:'#4ade80' },
+    mp4:    { label:'🎬 MP4',     color:'#60a5fa', border:'#60a5fa' },
+    webm:   { label:'🎬 WEBM',    color:'#60a5fa', border:'#60a5fa' },
+    ts:     { label:'🎬 TS',      color:'#60a5fa', border:'#60a5fa' },
+    iframe: { label:'🖼️ IFRAME',  color:'#a78bfa', border:'#7c5cfc' },
+};
+
+const MP_SANDBOX_ATTR = 'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock';
+
+/* ── MegaPlayer DOM refs (resolved lazily after DOMContentLoaded) ── */
+let mp_vid, mp_vwrap, mp_iframeWrap, mp_iframePlayer,
+    mp_seek, mp_sbuf, mp_sprog, mp_sthumb,
+    mp_bplay, mp_bmute, mp_vol, mp_tdisp, mp_qual, mp_speed, mp_status_el;
+
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — PROXY UTILS
+═══════════════════════════════════════════════════════════ */
 function getProxyUrl(url) {
     if (!url) return '';
     if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
@@ -462,17 +594,15 @@ function getProxyUrl(url) {
     }
     return url;
 }
-
 function buildProxiedUrl(rawUrl, proxyBase) {
     if (!rawUrl) return '';
     if (!proxyBase) return rawUrl;
-    // If proxyBase ends with '=' or '?' we can just append
     return proxyBase + encodeURIComponent(rawUrl);
 }
 
-/* ─────────────────────────────────────────────
-   DATASET / SEARCH
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — DATASET / SEARCH
+═══════════════════════════════════════════════════════════ */
 async function loadAllDatasets() {
     if (datasetCache) return datasetCache;
     const promises = DATASET_FILENAMES.map(fname =>
@@ -482,11 +612,10 @@ async function loadAllDatasets() {
     datasetCache  = results.flat();
     return datasetCache;
 }
-
 async function searchOtakuVid(malId, epNum) {
-    const datasets   = await loadAllDatasets();
-    const targetMid  = String(malId).trim();
-    const targetEp   = String(epNum).trim();
+    const datasets  = await loadAllDatasets();
+    const targetMid = String(malId).trim();
+    const targetEp  = String(epNum).trim();
     return datasets.find(item => {
         const mid = String(item["mal_id/anilist_id/tmdb_id"]||item.mal_id||'').trim();
         const ep  = String(item["episode_no"]||item.ep||'').trim();
@@ -494,9 +623,9 @@ async function searchOtakuVid(malId, epNum) {
     });
 }
 
-/* ─────────────────────────────────────────────
-   PROXY-FETCH HELPERS
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — PROXY-FETCH HELPERS
+═══════════════════════════════════════════════════════════ */
 async function fetchHtmlWithProxy(url) {
     const proxyUrls = [];
     if (window.location.origin && window.location.protocol.startsWith('http') && !window.location.origin.includes('github.io')) {
@@ -518,7 +647,6 @@ async function fetchHtmlWithProxy(url) {
     }
     throw new Error("Could not fetch page content via proxies");
 }
-
 function unpackPackedJS(html) {
     const match = html.match(/eval\(function\(p,a,c,k,e,d\).*?'(.*?)',(\d+),(\d+),'(.*?)'\.split\('\|'\)\)\)/s);
     if (!match) return "";
@@ -530,7 +658,6 @@ function unpackPackedJS(html) {
     for (let i=count-1;i>=0;i--){if(words[i]){const t=unbase(i,base);const g=new RegExp('\\b'+t+'\\b','g');payload=payload.replace(g,words[i]);}}
     return payload;
 }
-
 async function parseMasterPlaylist(masterUrl) {
     try {
         const proxied = getProxyUrl(masterUrl);
@@ -561,9 +688,8 @@ async function parseMasterPlaylist(masterUrl) {
             }
         }
         return variants;
-    } catch(e) {return [];}
+    } catch(e){return [];}
 }
-
 async function extractOtakuVidStreams(embedUrl) {
     try {
         const html      = await fetchHtmlWithProxy(embedUrl);
@@ -577,7 +703,6 @@ async function extractOtakuVidStreams(embedUrl) {
         return {masterUrl:null,variants:[],error:e.message};
     }
 }
-
 async function getOtakuVidStreams(malId,epNum) {
     const cacheKey = `${malId}_${epNum}`;
     if (streamCache.has(cacheKey)) return await streamCache.get(cacheKey);
@@ -625,7 +750,6 @@ async function getOtakuVidStreams(malId,epNum) {
     streamCache.set(cacheKey,fetchPromise);
     return await fetchPromise;
 }
-
 async function preExtractNextEpisodes(malId,currentEpNum,totalToFetch=50) {
     const myPrefetchToken = ++preFetchAbortToken;
     const startEp  = parseInt(currentEpNum,10)+1;
@@ -657,9 +781,9 @@ async function preExtractNextEpisodes(malId,currentEpNum,totalToFetch=50) {
     }
 }
 
-/* ─────────────────────────────────────────────
-   TOPBAR / PANEL CONTROLS
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — TOPBAR / PANEL CONTROLS
+═══════════════════════════════════════════════════════════ */
 function toggleBar(){
     const inner=document.getElementById('topbar-inner');
     const btn=document.getElementById('toggle-bar-btn');
@@ -683,9 +807,9 @@ function setLang(lang){
     } else if(malId&&ep) showPlayer(malId,ep,lang);
 }
 
-/* ─────────────────────────────────────────────
-   PLAY STREAM (HLS + native + iframe)
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — PLAY STREAM (HLS + native + iframe)
+═══════════════════════════════════════════════════════════ */
 function playStream(stream) {
     activeServerStream = stream;
     const placeholder  = document.getElementById('placeholder');
@@ -693,7 +817,6 @@ function playStream(stream) {
     const iframe       = document.getElementById('player-iframe');
     placeholder.style.display = 'none';
     if (!stream) return;
-
     if (stream.type==='iframe') {
         video.style.display='none'; video.pause();
         iframe.src=stream.url; iframe.style.display='block';
@@ -701,51 +824,40 @@ function playStream(stream) {
     }
     iframe.style.display='none'; iframe.src='about:blank';
     video.style.display='block';
-
     const proxiedUrl = getProxyUrl(stream.url);
     if (hlsInstance){hlsInstance.destroy();hlsInstance=null;}
-
     if (proxiedUrl.includes('.m3u8')||proxiedUrl.includes('.txt')||(stream.url&&stream.url.includes('.txt'))) {
         if (Hls.isSupported()) {
             hlsInstance = new Hls(buildHlsConfig(stream));
             hlsInstance.loadSource(proxiedUrl);
             hlsInstance.attachMedia(video);
             hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>{video.muted=true;video.play();});});
-            hlsInstance.on(Hls.Events.ERROR,(ev,data)=>{
-                if(data.fatal) console.warn('[HLS] Fatal error:',data.type,data.details);
-            });
+            hlsInstance.on(Hls.Events.ERROR,(ev,data)=>{if(data.fatal) console.warn('[HLS] Fatal error:',data.type,data.details);});
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src=proxiedUrl;
-            video.play().catch(()=>{video.muted=true;video.play();});
+            video.src=proxiedUrl; video.play().catch(()=>{video.muted=true;video.play();});
         }
     } else {
-        video.src=proxiedUrl;
-        video.play().catch(()=>{video.muted=true;video.play();});
+        video.src=proxiedUrl; video.play().catch(()=>{video.muted=true;video.play();});
     }
-
     video.onended = ()=>{
         const malId=document.getElementById('inp-mal').value.trim();
         const ep=document.getElementById('inp-ep').value.trim();
         if(malId&&ep) triggerAutoNext(malId,ep,currentLang);
     };
 }
-
 function buildHlsConfig(stream) {
     const cfg = {xhrSetup:null};
-    // If the stream has extra headers baked in (from direct play), we apply them
     if (stream._headers && Object.keys(stream._headers).length > 0) {
-        cfg.xhrSetup = function(xhr, url) {
-            Object.entries(stream._headers).forEach(([k,v])=>{
-                try{xhr.setRequestHeader(k,v);}catch(e){}
-            });
+        cfg.xhrSetup = function(xhr) {
+            Object.entries(stream._headers).forEach(([k,v])=>{try{xhr.setRequestHeader(k,v);}catch(e){}});
         };
     }
     return cfg;
 }
 
-/* ─────────────────────────────────────────────
-   SERVER PANEL RENDER
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — SERVER PANEL RENDER
+═══════════════════════════════════════════════════════════ */
 function renderServerPanel(streams){
     const qRow   = document.getElementById('quality-row');
     const srvList= document.getElementById('server-list');
@@ -790,9 +902,9 @@ function renderServerPanel(streams){
     }
 }
 
-/* ─────────────────────────────────────────────
-   SHOW PLAYER (MAL ID + EP)
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — SHOW PLAYER (MAL ID + EP)
+═══════════════════════════════════════════════════════════ */
 function getBestHdStream(streams,preferredLang='dub'){
     if(!streams||streams.length===0) return null;
     const priority=["1080p","720p","480p","360p"];
@@ -803,7 +915,6 @@ function getBestHdStream(streams,preferredLang='dub'){
     for(const r of priority){const f=streams.find(s=>(s.quality||s.server||'').includes(r));if(f)return f;}
     return streams[0];
 }
-
 async function showPlayer(malId,ep,lang='dub'){
     cancelAutoNext(); currentLang=lang;
     const myToken=++_fetchToken;
@@ -844,7 +955,6 @@ async function showPlayer(malId,ep,lang='dub'){
         if(myToken===_fetchToken&&spinner) spinner.style.display='none';
     }
 }
-
 function loadPlayer(){
     const malId=document.getElementById('inp-mal').value.trim();
     const ep=document.getElementById('inp-ep').value.trim();
@@ -854,9 +964,9 @@ function loadPlayer(){
 function goPrevEp(){const malId=document.getElementById('inp-mal').value.trim();const ep=parseInt(document.getElementById('inp-ep').value.trim(),10);if(!malId||isNaN(ep)||ep<=1)return;showPlayer(malId,ep-1,currentLang);}
 function goNextEp(){const malId=document.getElementById('inp-mal').value.trim();const ep=parseInt(document.getElementById('inp-ep').value.trim(),10);if(!malId||isNaN(ep))return;showPlayer(malId,ep+1,currentLang);}
 
-/* ─────────────────────────────────────────────
-   AUTO-NEXT
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — AUTO-NEXT
+═══════════════════════════════════════════════════════════ */
 function triggerAutoNext(malId,ep,lang){
     if(!document.getElementById('chk-autonext').checked) return;
     const nextEp=parseInt(ep,10)+1;
@@ -873,9 +983,9 @@ function triggerAutoNext(malId,ep,lang){
 function goNextNow(){cancelAutoNext();const malId=document.getElementById('inp-mal').value.trim();const ep=parseInt(document.getElementById('inp-ep').value.trim(),10);if(!malId||isNaN(ep))return;showPlayer(malId,ep+1,currentLang);}
 function cancelAutoNext(){clearInterval(autoNextTimer);autoNextTimer=null;const ov=document.getElementById('autonext-overlay');if(ov)ov.style.display='none';}
 
-/* ─────────────────────────────────────────────
-   URL PARAMS
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OTAKUVID — URL PARAMS
+═══════════════════════════════════════════════════════════ */
 function parseParamsFromUrl(){
     const path=window.location.pathname,search=window.location.search,hash=window.location.hash;
     const pm=path.match(/\/(\d+)\/(\d+)(?:\/(dub|sub))?\/?$/i);
@@ -893,255 +1003,453 @@ function parseParamsFromUrl(){
 }
 
 /* ═══════════════════════════════════════════════════════════
-   DIRECT STREAM MODAL
+   MEGAPLAYER MODAL — open / close
 ═══════════════════════════════════════════════════════════ */
-
-function openDirectModal(){
-    const overlay=document.getElementById('direct-modal-overlay');
-    overlay.classList.add('open');
-    // Auto-read clipboard on open
-    autoDetectClipboard();
-    updateNowPlayingBanner();
+function openMegaPlayer(){
+    document.getElementById('mega-overlay').classList.add('open');
+}
+function closeMegaPlayer(){
+    document.getElementById('mega-overlay').classList.remove('open');
+}
+function megaOverlayClose(e){
+    if(e.target===document.getElementById('mega-overlay')) closeMegaPlayer();
 }
 
-function closeDirectModal(){
-    document.getElementById('direct-modal-overlay').classList.remove('open');
-}
-
-function overlayClickClose(e){
-    if(e.target===document.getElementById('direct-modal-overlay')) closeDirectModal();
-}
-
-/* ── Clipboard auto-detect ── */
-async function autoDetectClipboard(){
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — PROFILE / USER RULES  (localStorage fallback)
+═══════════════════════════════════════════════════════════ */
+async function mpLoadUserRules(){
+    if(mp_profileCache) return mp_profileCache;
     try{
-        const text=(await navigator.clipboard.readText()).trim();
-        if(isStreamUrl(text)){
-            const inp=document.getElementById('dm-url-inp');
-            if(!inp.value||inp.value!==text){
-                inp.value=text;
-                setProxyStatusForUrl(text);
-            }
+        const r=await fetch('/api/profiles');
+        if(r.ok){mp_profileCache=await r.json();return mp_profileCache;}
+    } catch{}
+    try{return JSON.parse(localStorage.getItem(MP_LS_KEY)||'{}');}catch{return {};}
+}
+async function mpSaveUserRule(host,ref,origin,proxyMode,proxyFmt,customUrl){
+    const body={host,ref,origin,proxyMode:proxyMode||'',proxyFmt:proxyFmt||'',customUrl:customUrl||''};
+    try{
+        const r=await fetch('/api/profiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(r.ok){mp_profileCache=null;const d=await mpLoadUserRules();mpRenderSavedRules(d);return;}
+    } catch{}
+    const data=await mpLoadUserRules();
+    data[host]={ref,origin,proxyMode:proxyMode||'',proxyFmt:proxyFmt||'',customUrl:customUrl||'',saved:new Date().toISOString()};
+    localStorage.setItem(MP_LS_KEY,JSON.stringify(data));
+    mp_profileCache=data;
+    mpRenderSavedRules(data);
+}
+async function mpDeleteUserRule(host){
+    try{await fetch(`/api/profiles/${encodeURIComponent(host)}`,{method:'DELETE'});mp_profileCache=null;}
+    catch{const d=await mpLoadUserRules();delete d[host];localStorage.setItem(MP_LS_KEY,JSON.stringify(d));mp_profileCache=d;}
+    const d=await mpLoadUserRules();mpRenderSavedRules(d);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — URL INTELLIGENCE
+═══════════════════════════════════════════════════════════ */
+function mpDetectUrlType(url){
+    if(!url) return null;
+    const u=url.split('?')[0].toLowerCase();
+    if(u.endsWith('.m3u8')||u.includes('.m3u8')) return 'hls';
+    if(u.endsWith('.txt'))  return 'txt';
+    if(/\.(mp4|mov|mkv|avi|flv|ogg)$/.test(u)) return 'mp4';
+    if(u.endsWith('.webm')) return 'webm';
+    if(u.endsWith('.ts'))   return 'ts';
+    return 'iframe';
+}
+function mpShowUrlTypeBadge(url){
+    const badge=document.getElementById('mp-urlTypeBadge');
+    if(!url){badge.style.display='none';return;}
+    const type=mpDetectUrlType(url);
+    const t=MP_URL_TYPES[type];
+    badge.textContent=t.label;
+    badge.style.color=t.color;
+    badge.style.borderColor=t.border;
+    badge.style.background=t.color+'18';
+    badge.style.display='inline-flex';
+}
+function mpIsHlsUrl(url){const u=url.split('?')[0].toLowerCase();return u.endsWith('.m3u8')||u.includes('.m3u8')||u.endsWith('.txt');}
+function mpIsDirectVideo(url){const u=url.split('?')[0].toLowerCase();return /\.(mp4|webm|ogg|mov|mkv|avi|flv|ts)(\?|$)/.test(u);}
+function mpIsIframeUrl(url){return !mpIsHlsUrl(url)&&!mpIsDirectVideo(url);}
+
+async function mpOnUrlInput(){
+    const url=document.getElementById('mp-urlIn').value.trim();
+    mpShowUrlTypeBadge(url);
+    if(!url) return;
+    if(mpIsDirectVideo(url)){mpSetStatus('🎬 MP4/direct video detected — Referer/Origin optional','#a78bfa');return;}
+    if(mpIsIframeUrl(url)){mpSetStatus('🖼️ Unknown format — will open in iframe automatically','#a78bfa');return;}
+    let host='';
+    try{host=new URL(url).hostname.toLowerCase();}catch{return;}
+    // Check built-in rules first
+    for(const rule of MP_KNOWN_RULES){
+        if(rule.cdn.some(c=>host.includes(c))){
+            document.getElementById('mp-refIn').value=rule.ref||'';
+            document.getElementById('mp-origIn').value=rule.origin||'';
+            mpSetStatus(`🔍 Built-in rule applied: ${rule.label}`,'#a78bfa');
+            return;
         }
-    }catch(e){/* clipboard permission denied - silent */}
-}
-
-async function pasteFromClipboard(){
-    try{
-        const text=(await navigator.clipboard.readText()).trim();
-        document.getElementById('dm-url-inp').value=text;
-        setProxyStatusForUrl(text);
-    }catch(e){
-        const inp=document.getElementById('dm-url-inp');
-        inp.focus();
-        document.execCommand('paste');
+    }
+    // Then saved user rules
+    const ur=await mpLoadUserRules();
+    for(const [h,d] of Object.entries(ur)){
+        if(host.includes(h)){
+            document.getElementById('mp-refIn').value=d.ref||'';
+            document.getElementById('mp-origIn').value=d.origin||'';
+            if(d.proxyMode){document.getElementById('mp-proxyMode').value=d.proxyMode;mpOnProxyModeChange();}
+            if(d.proxyFmt&&document.getElementById('mp-proxyFormat')) document.getElementById('mp-proxyFormat').value=d.proxyFmt;
+            if(d.customUrl&&document.getElementById('mp-customProxyUrl')) document.getElementById('mp-customProxyUrl').value=d.customUrl;
+            mpSetStatus(`💾 Saved rule applied: ${h}`,'#a78bfa');
+            return;
+        }
     }
 }
-
-function isStreamUrl(s){
-    if(!s||typeof s!=='string') return false;
-    return /^https?:\/\/.+\.(m3u8|txt|mp4|mkv|ts|webm|avi|flv)(\?.*)?$/i.test(s)||
-           /^https?:\/\//.test(s) && (s.includes('m3u8')||s.includes('stream')||s.includes('hls')||s.includes('.ts'));
+async function mpSaveCurrentRule(){
+    const url=document.getElementById('mp-urlIn').value.trim();
+    const ref=document.getElementById('mp-refIn').value.trim();
+    const orig=document.getElementById('mp-origIn').value.trim();
+    const proxyMode=document.getElementById('mp-proxyMode').value;
+    const proxyFmt=document.getElementById('mp-proxyFormat')?document.getElementById('mp-proxyFormat').value:'foxy';
+    const customUrl=document.getElementById('mp-customProxyUrl')?document.getElementById('mp-customProxyUrl').value.trim():'';
+    if(!url){mpSetStatus('❌ Paste a URL first','#ff5555');return;}
+    let host='';
+    try{host=new URL(url).hostname;}catch{mpSetStatus('❌ Invalid URL','#ff5555');return;}
+    await mpSaveUserRule(host,ref||'',orig||'',proxyMode,proxyFmt,customUrl);
+    localStorage.setItem('megaplayer_proxy_mode',proxyMode);
+    localStorage.setItem('megaplayer_proxy_fmt',proxyFmt);
+    localStorage.setItem('megaplayer_proxy_custom_url',customUrl);
+    mpSetStatus(`💾 Saved for ${host} (proxy:${proxyMode})`,'#4ade80');
+}
+async function mpRenderSavedRules(data){
+    if(!data) data=await mpLoadUserRules();
+    const el=document.getElementById('mp-savedRules');
+    const rc=document.getElementById('mp-rulesCount');
+    const entries=Object.entries(data);
+    rc.textContent=entries.length?`(${entries.length})`:'';
+    if(!entries.length){
+        el.innerHTML='<div style="color:#7777aa;font-size:.7rem;padding:3px 0">No saved rules yet — play a URL then click 💾 Save Rule</div>';
+        return;
+    }
+    el.innerHTML=entries.map(([host,d])=>{
+        const proxyLabel=d.proxyMode?`<span style="color:#a78bfa;margin-left:4px">[${d.proxyMode}]</span>`:'';
+        const refLabel=d.ref?d.ref:'<span style="color:#7777aa;font-style:italic">no referer</span>';
+        return `<div class="mp-rule-item">
+            <div class="mp-rule-info">
+                <div class="mp-rule-host">${host}${proxyLabel}</div>
+                <div class="mp-rule-ref">${refLabel}</div>
+            </div>
+            <button class="mp-rule-del" onclick="mpDeleteUserRule('${host}')">✕</button>
+        </div>`;
+    }).join('');
 }
 
-/* ── Proxy status indicator ── */
-function setProxyStatusForUrl(url){
-    const dot  = document.getElementById('proxy-status-dot');
-    const text = document.getElementById('proxy-status-text');
-    if(!url){dot.className='';text.textContent='Enter a stream URL to begin';return;}
-    if(url.includes('anivexa.onrender.com/proxy')){
-        dot.className='proxied';text.textContent='Already routed through proxy';
-    } else if(/\.(m3u8|txt)(\?.*)?$/i.test(url)){
-        dot.className='active';text.textContent='HLS / M3U8 stream detected — ready to play';
-    } else if(/\.mp4(\?.*)?$/i.test(url)){
-        dot.className='active';text.textContent='MP4 stream detected';
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — PROXY BUILDER
+═══════════════════════════════════════════════════════════ */
+function mpOnProxyModeChange(){
+    const mode=document.getElementById('mp-proxyMode').value;
+    document.getElementById('mp-customExtra').style.display=mode==='custom'?'block':'none';
+}
+function mpBuildSrc(m3u8,ref,orig){
+    const mode=document.getElementById('mp-proxyMode').value;
+    ref=ref||''; orig=orig||'';
+    if(mode==='local')
+        return `/proxy?url=${encodeURIComponent(m3u8)}&ref=${encodeURIComponent(ref)}&origin=${encodeURIComponent(orig)}`;
+    if(mode==='custom'){
+        const base=(document.getElementById('mp-customProxyUrl').value||'').trim().replace(/\/$/,'');
+        const format=document.getElementById('mp-proxyFormat').value;
+        if(format==='foxy'){
+            const urlB64=btoa(m3u8).replace(/\+/g,'%2B').replace(/=/g,'%3D');
+            const hdrs={...(ref&&{Referer:ref}),...(orig&&{Origin:orig})};
+            const hdrB64=btoa(JSON.stringify(hdrs)).replace(/\+/g,'%2B').replace(/=/g,'%3D');
+            return `${base}?url=${urlB64}&headers=${hdrB64}`;
+        }
+        if(format==='plain'){let q=`${base}?url=${encodeURIComponent(m3u8)}`;if(ref) q+=`&referer=${encodeURIComponent(ref)}`;if(orig) q+=`&origin=${encodeURIComponent(orig)}`;return q;}
+        if(format==='cors') return `${base}/${m3u8}`;
+    }
+    return m3u8; // direct
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — SANDBOX TOGGLE
+═══════════════════════════════════════════════════════════ */
+function mpOnSandboxChange(){
+    const on=document.getElementById('mp-chkSandbox').checked;
+    document.getElementById('mp-optSandbox').classList.toggle('active',on);
+    localStorage.setItem('megaplayer_opt_sandbox',on?'1':'0');
+    if(mp_vwrap&&mp_vwrap.classList.contains('iframe-mode')) mpApplyIframeOptions();
+}
+function mpApplyIframeOptions(){
+    if(document.getElementById('mp-chkSandbox').checked){
+        mp_iframePlayer.setAttribute('sandbox',MP_SANDBOX_ATTR);
     } else {
-        dot.className='active';text.textContent='URL detected';
+        mp_iframePlayer.removeAttribute('sandbox');
+    }
+}
+function mpShowVideoMode(){
+    mp_vid.style.display='block';
+    mp_iframeWrap.style.display='none';
+    mp_iframePlayer.src='about:blank';
+    mp_iframePlayer.removeAttribute('sandbox');
+    mp_vwrap.classList.remove('iframe-mode');
+}
+function mpShowIframeMode(src){
+    mp_vid.style.display='none';
+    mp_iframeWrap.style.display='block';
+    mp_vwrap.classList.add('iframe-mode');
+    mp_vid.pause(); mp_vid.src='';
+    mpApplyIframeOptions();
+    mp_iframePlayer.src=src;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — STREAM LOADER
+═══════════════════════════════════════════════════════════ */
+function mpLoadFromInput(){
+    const url=document.getElementById('mp-urlIn').value.trim();
+    let ref=document.getElementById('mp-refIn').value.trim();
+    let orig=document.getElementById('mp-origIn').value.trim();
+    if(!url){mpSetStatus('❌ Paste a URL first','#ff5555');return;}
+    mpShowUrlTypeBadge(url);
+    mpLoadStream(url,ref,orig);
+}
+function mpLoadStream(streamUrl,ref,orig,autoPlay=true){
+    if(mp_hls){mp_hls.destroy();mp_hls=null;}
+    mp_qual.innerHTML='<option value="-1">Auto</option>';
+    const mode=document.getElementById('mp-proxyMode').value;
+    const modeLabel=mode==='local'?'local proxy':mode==='custom'?'custom proxy':'direct';
+    const src=mpBuildSrc(streamUrl,ref,orig);
+
+    if(mpIsIframeUrl(streamUrl)){
+        mpShowIframeMode(streamUrl);
+        mpSetStatus(`🖼️ Opening in iframe  |  ⚡ direct`,'#a78bfa');
+        return;
+    }
+    mpShowVideoMode();
+    mpSetStatus(`⏳ Connecting via ${modeLabel}…`,'#a78bfa');
+
+    if(mpIsDirectVideo(streamUrl)){
+        mp_vid.src=src; mp_vid.load();
+        if(autoPlay) mp_vid.play().catch(()=>{});
+        mp_vid.onloadedmetadata=()=>mpSetStatus(`✅ Playing MP4  |  🔀 ${modeLabel}`,'#4ade80');
+        mp_vid.onerror=()=>mpSetStatus(`❌ Failed to load — try a different proxy mode`,'#ff5555');
+        return;
+    }
+
+    // HLS
+    if(Hls.isSupported()){
+        mp_hls=new Hls({enableWorker:true,lowLatencyMode:false});
+        mp_hls.loadSource(src);
+        mp_hls.attachMedia(mp_vid);
+        mp_hls.on(Hls.Events.MANIFEST_PARSED,(ev,d)=>{
+            mpSetStatus(`✅ Playing HLS — ${d.levels.length} quality level(s)  |  🔀 ${modeLabel}`,'#4ade80');
+            d.levels.forEach((l,i)=>{const o=document.createElement('option');o.value=i;o.textContent=l.height?l.height+'p':`Level ${i}`;mp_qual.appendChild(o);});
+            if(autoPlay) mp_vid.play().catch(()=>{});
+        });
+        mp_hls.on(Hls.Events.LEVEL_SWITCHED,(ev,d)=>{
+            const l=mp_hls.levels[d.level];
+            if(l) mpSetStatus(`📶 ${l.height?l.height+'p':'Auto'} — ${Math.round((l.bitrate||0)/1000)}kbps  |  🔀 ${modeLabel}`,'#7777aa');
+        });
+        mp_hls.on(Hls.Events.ERROR,(ev,d)=>{
+            if(d.fatal){
+                if(d.type===Hls.ErrorTypes.MEDIA_ERROR){mp_hls.recoverMediaError();return;}
+                mpSetStatus(`❌ ${d.details} — try a different proxy mode`,'#ff5555');
+            }
+        });
+    } else if(mp_vid.canPlayType('application/vnd.apple.mpegurl')){
+        mp_vid.src=src;
+        if(autoPlay) mp_vid.play().catch(()=>{});
+        mpSetStatus('✅ Native HLS','#4ade80');
+    } else {
+        mpSetStatus('❌ HLS not supported in this browser','#ff5555');
     }
 }
 
-/* Watch URL input changes */
-document.getElementById('dm-url-inp').addEventListener('input',function(){
-    clearTimeout(dmUrlChangeTimer);
-    dmUrlChangeTimer=setTimeout(()=>setProxyStatusForUrl(this.value.trim()),400);
-});
-
-/* ── Proxy mode ── */
-function toggleProxyMode(){
-    dmProxyEnabled=!dmProxyEnabled;
-    const btn=document.getElementById('dm-proxy-toggle');
-    btn.textContent=dmProxyEnabled?'ON':'OFF';
-    btn.classList.toggle('on',dmProxyEnabled);
-}
-
-function setProxyPreset(name){
-    const proxyInp=document.getElementById('dm-proxy-inp');
-    if(name==='custom'){proxyInp.focus();return;}
-    if(PROXY_PRESETS[name]){
-        proxyInp.value=PROXY_PRESETS[name];
-        if(!dmProxyEnabled) toggleProxyMode();
-    }
-}
-
-/* ── Advanced section ── */
-function toggleAdvanced(){
-    const sec=document.getElementById('adv-section');
-    const btn=document.getElementById('adv-toggle');
-    sec.classList.toggle('open');
-    btn.classList.toggle('open');
-}
-
-/* ── Header rows ── */
-function addHeaderRow(key='',value=''){
-    const list=document.getElementById('dm-headers-list');
-    const row=document.createElement('div');
-    row.className='dm-header-row';
-    row.innerHTML=`
-        <input class="key-inp" type="text" placeholder="Header-Name" value="${escHtml(key)}" spellcheck="false" autocomplete="off">
-        <input type="text" placeholder="Header-Value" value="${escHtml(value)}" spellcheck="false" autocomplete="off">
-        <button class="dm-remove-hdr" onclick="this.parentElement.remove()" title="Remove">&#10005;</button>
-    `;
-    list.appendChild(row);
-}
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
-
-function collectHeaders(){
-    const rows=document.querySelectorAll('#dm-headers-list .dm-header-row');
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — "SEND TO MAIN PLAYER" BRIDGE
+   Takes the URL currently in MegaPlayer and plays it in the
+   main OtakuVid video element, then closes the MegaPlayer.
+═══════════════════════════════════════════════════════════ */
+function mpSendToMainPlayer(){
+    const url=document.getElementById('mp-urlIn').value.trim();
+    if(!url){mpSetStatus('❌ Paste a URL first','#ff5555');return;}
+    const ref=document.getElementById('mp-refIn').value.trim();
+    const orig=document.getElementById('mp-origIn').value.trim();
     const headers={};
-    rows.forEach(row=>{
-        const [keyInp,valInp]=row.querySelectorAll('input');
-        const k=(keyInp.value||'').trim();
-        const v=(valInp.value||'').trim();
-        if(k) headers[k]=v;
+    if(orig) headers['Origin']=orig;
+    if(ref) headers['Referer']=ref;
+    // Pause & detach MegaPlayer's HLS before switching
+    if(mp_hls){mp_hls.destroy();mp_hls=null;}
+    mp_vid.pause(); mp_vid.src='';
+    const stream={url,type:mpIsDirectVideo(url)?'mp4':'mp4',_headers:headers};
+    playStream(stream);
+    closeMegaPlayer();
+    // Open topbar so user can see the controls
+    const inner=document.getElementById('topbar-inner');
+    if(!inner.classList.contains('open')){
+        inner.classList.add('open');
+        document.getElementById('toggle-bar-btn').classList.add('open');
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — VIDEO CONTROLS
+═══════════════════════════════════════════════════════════ */
+function mpInitControls(){
+    mp_vid    = document.getElementById('mp-vid');
+    mp_vwrap  = document.getElementById('mp-vwrap');
+    mp_iframeWrap   = document.getElementById('mp-iframeWrap');
+    mp_iframePlayer = document.getElementById('mp-iframePlayer');
+    mp_seek   = document.getElementById('mp-seek');
+    mp_sbuf   = document.getElementById('mp-sbuf');
+    mp_sprog  = document.getElementById('mp-sprog');
+    mp_sthumb = document.getElementById('mp-sthumb');
+    mp_bplay  = document.getElementById('mp-bplay');
+    mp_bmute  = document.getElementById('mp-bmute');
+    mp_vol    = document.getElementById('mp-vol');
+    mp_tdisp  = document.getElementById('mp-tdisp');
+    mp_qual   = document.getElementById('mp-qual');
+    mp_speed  = document.getElementById('mp-speed');
+    mp_status_el = document.getElementById('mp-status');
+
+    mp_bplay.onclick = ()=>mp_vid.paused?mp_vid.play():mp_vid.pause();
+    mp_vid.onplay    = ()=>{mp_bplay.textContent='⏸';mp_vwrap.classList.remove('paused');};
+    mp_vid.onpause   = ()=>{mp_bplay.textContent='▶';mp_vwrap.classList.add('paused');};
+
+    document.getElementById('mp-bback').onclick = ()=>mp_vid.currentTime=Math.max(0,mp_vid.currentTime-10);
+    document.getElementById('mp-bfwd').onclick  = ()=>mp_vid.currentTime+=10;
+    mp_bmute.onclick  = ()=>{mp_vid.muted=!mp_vid.muted;mp_bmute.textContent=mp_vid.muted?'🔇':'🔊';};
+    mp_vol.oninput    = ()=>{mp_vid.volume=mp_vol.value;};
+    mp_speed.onchange = ()=>{mp_vid.playbackRate=parseFloat(mp_speed.value);};
+    mp_qual.onchange  = ()=>{if(mp_hls) mp_hls.currentLevel=parseInt(mp_qual.value);};
+
+    document.getElementById('mp-bpip').onclick = ()=>
+        document.pictureInPictureElement?document.exitPictureInPicture():mp_vid.requestPictureInPicture().catch(()=>{});
+    document.getElementById('mp-bfs').onclick = ()=>
+        document.fullscreenElement?document.exitFullscreen():mp_vwrap.requestFullscreen().catch(()=>{});
+
+    // Seek bar
+    mp_vid.ontimeupdate = ()=>{
+        if(!mp_vid.duration||mp_scrub) return;
+        const p=mp_vid.currentTime/mp_vid.duration;
+        mp_sprog.style.width=(p*100)+'%';
+        mp_sthumb.style.left=(p*100)+'%';
+        mp_tdisp.textContent=mpFmt(mp_vid.currentTime)+' / '+mpFmt(mp_vid.duration);
+    };
+    mp_vid.onprogress = ()=>{
+        if(mp_vid.buffered.length&&mp_vid.duration)
+            mp_sbuf.style.width=(mp_vid.buffered.end(mp_vid.buffered.length-1)/mp_vid.duration*100)+'%';
+    };
+    function mpSeekTo(e){
+        const r=mp_seek.getBoundingClientRect();
+        mp_vid.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*mp_vid.duration;
+    }
+    mp_seek.onmousedown = e=>{mp_scrub=true;mpSeekTo(e);};
+    document.addEventListener('mousemove',e=>{if(mp_scrub) mpSeekTo(e);});
+    document.addEventListener('mouseup',()=>{mp_scrub=false;});
+    mp_seek.addEventListener('touchstart',e=>{mp_scrub=true;mpSeekTo(e.touches[0]);},{passive:true});
+    document.addEventListener('touchmove',e=>{if(mp_scrub) mpSeekTo(e.touches[0]);},{passive:true});
+    document.addEventListener('touchend',()=>{mp_scrub=false;});
+
+    // URL input listeners
+    document.getElementById('mp-urlIn').addEventListener('input',mpOnUrlInput);
+    document.getElementById('mp-urlIn').addEventListener('paste',()=>setTimeout(mpOnUrlInput,50));
+
+    // Keyboard shortcuts scoped to MegaPlayer (only when modal is open)
+    document.addEventListener('keydown',e=>{
+        if(!document.getElementById('mega-overlay').classList.contains('open')) return;
+        if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+        if(e.key===' '||e.key==='k'){e.preventDefault();mp_vid.paused?mp_vid.play():mp_vid.pause();}
+        if(e.key==='ArrowRight') mp_vid.currentTime+=10;
+        if(e.key==='ArrowLeft') mp_vid.currentTime=Math.max(0,mp_vid.currentTime-10);
+        if(e.key==='ArrowUp'){mp_vid.volume=Math.min(1,mp_vid.volume+.1);mp_vol.value=mp_vid.volume;}
+        if(e.key==='ArrowDown'){mp_vid.volume=Math.max(0,mp_vid.volume-.1);mp_vol.value=mp_vid.volume;}
+        if(e.key==='m'){mp_vid.muted=!mp_vid.muted;mp_bmute.textContent=mp_vid.muted?'🔇':'🔊';}
+        if(e.key==='Escape') closeMegaPlayer();
     });
-    const origin=document.getElementById('dm-origin-inp').value.trim();
-    const referer=document.getElementById('dm-referer-inp').value.trim();
-    if(origin) headers['Origin']=origin;
-    if(referer) headers['Referer']=referer;
-    return headers;
-}
 
-/* ── Now-playing banner ── */
-function updateNowPlayingBanner(){
-    const banner=document.getElementById('dm-now-playing');
-    const urlEl =document.getElementById('dm-now-playing-url');
-    if(dmCurrentUrl){
-        banner.style.display='block';
-        urlEl.textContent=dmCurrentUrl;
-    } else {
-        banner.style.display='none';
-    }
-}
-
-/* ── PLAY ── */
-async function directPlay(){
-    const rawUrl  = document.getElementById('dm-url-inp').value.trim();
-    const proxyBase = dmProxyEnabled ? document.getElementById('dm-proxy-inp').value.trim() : '';
-    const headers = collectHeaders();
-    const errorEl = document.getElementById('dm-error');
-    const playBtn = document.getElementById('dm-play-btn');
-
-    errorEl.style.display='none';
-    if(!rawUrl){errorEl.textContent='Please enter a stream URL.';errorEl.style.display='block';return;}
-
-    playBtn.classList.add('loading');
-
-    try{
-        let finalUrl = proxyBase ? buildProxiedUrl(rawUrl, proxyBase) : getProxyUrl(rawUrl);
-
-        // Detect type
-        const isHls = /\.(m3u8|txt)(\?.*)?$/i.test(rawUrl) || rawUrl.toLowerCase().includes('m3u8');
-
-        const video  = document.getElementById('videoPlayer');
-        const iframe = document.getElementById('player-iframe');
-        const ph     = document.getElementById('placeholder');
-        ph.style.display='none';
-        iframe.style.display='none'; iframe.src='about:blank';
-        video.style.display='block';
-
-        if(hlsInstance){hlsInstance.destroy();hlsInstance=null;}
-
-        const stream = {url:rawUrl, _headers:headers, type:'mp4'};
-
-        if(isHls){
-            if(Hls.isSupported()){
-                const hlsCfg = {
-                    xhrSetup: Object.keys(headers).length>0 ? (xhr)=>{
-                        Object.entries(headers).forEach(([k,v])=>{try{xhr.setRequestHeader(k,v);}catch(e){}});
-                    } : null
-                };
-                // remove null
-                if(!hlsCfg.xhrSetup) delete hlsCfg.xhrSetup;
-                hlsInstance=new Hls(hlsCfg);
-                hlsInstance.loadSource(finalUrl);
-                hlsInstance.attachMedia(video);
-                hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>{
-                    video.play().catch(()=>{video.muted=true;video.play();});
-                });
-                hlsInstance.on(Hls.Events.ERROR,(ev,data)=>{
-                    if(data.fatal){
-                        // Show error to user
-                        errorEl.textContent=`HLS error: ${data.details} — try enabling proxy or a different proxy.`;
-                        errorEl.style.display='block';
-                    }
-                });
-            } else if(video.canPlayType('application/vnd.apple.mpegurl')){
-                video.src=finalUrl;
-                video.play().catch(()=>{video.muted=true;video.play();});
-            } else {
-                throw new Error('HLS is not supported in this browser.');
+    // PostMessage listener (for embedding / external control)
+    window.addEventListener('message',(event)=>{
+        if(event.data&&(event.data.type==='PLAY_STREAM'||event.data.url)){
+            const sUrl=event.data.url;
+            const sRef=event.data.ref||event.data.referer||'';
+            const sOrig=event.data.origin||'';
+            if(sUrl){
+                document.getElementById('mp-urlIn').value=sUrl;
+                if(sRef) document.getElementById('mp-refIn').value=sRef;
+                if(sOrig) document.getElementById('mp-origIn').value=sOrig;
+                mpShowUrlTypeBadge(sUrl);
+                openMegaPlayer();
+                mpLoadStream(sUrl,sRef,sOrig,true);
             }
-        } else {
-            video.src=finalUrl;
-            video.play().catch(()=>{video.muted=true;video.play();});
         }
-
-        dmCurrentUrl = rawUrl;
-        updateNowPlayingBanner();
-        setProxyStatusForUrl(rawUrl);
-        closeDirectModal();
-
-    } catch(err){
-        errorEl.textContent='Error: '+err.message;
-        errorEl.style.display='block';
-    } finally {
-        playBtn.classList.remove('loading');
-    }
+    });
 }
 
-/* ─────────────────────────────────────────────
-   KEYBOARD SHORTCUTS
-───────────────────────────────────────────── */
-document.addEventListener('keydown',e=>{
-    // Esc closes modal
-    if(e.key==='Escape') closeDirectModal();
-    // Ctrl+V / Cmd+V when modal open auto-detects
-    if((e.ctrlKey||e.metaKey)&&e.key==='v'){
-        const overlay=document.getElementById('direct-modal-overlay');
-        if(overlay.classList.contains('open')) setTimeout(autoDetectClipboard,100);
+/* ═══════════════════════════════════════════════════════════
+   MEGAPLAYER — HELPERS
+═══════════════════════════════════════════════════════════ */
+function mpFmt(s){
+    if(!s||isNaN(s)) return '0:00';
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60);
+    return h>0?`${h}:${mpPad(m)}:${mpPad(sec)}`:`${m}:${mpPad(sec)}`;
+}
+function mpPad(n){return String(n).padStart(2,'0');}
+function mpSetStatus(msg,color='#7777aa'){
+    if(mp_status_el){mp_status_el.textContent=msg;mp_status_el.style.color=color;}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',async()=>{
+    // Init MegaPlayer controls
+    mpInitControls();
+    mpShowVideoMode();
+
+    // Restore MegaPlayer proxy preferences
+    const savedMode=localStorage.getItem('megaplayer_proxy_mode');
+    const savedFmt =localStorage.getItem('megaplayer_proxy_fmt');
+    const savedCUrl=localStorage.getItem('megaplayer_proxy_custom_url');
+    if(savedMode){document.getElementById('mp-proxyMode').value=savedMode;mpOnProxyModeChange();}
+    if(savedFmt&&document.getElementById('mp-proxyFormat')) document.getElementById('mp-proxyFormat').value=savedFmt;
+    if(savedCUrl&&document.getElementById('mp-customProxyUrl')) document.getElementById('mp-customProxyUrl').value=savedCUrl;
+
+    // Restore sandbox toggle
+    const savedSandbox=localStorage.getItem('megaplayer_opt_sandbox');
+    const sbxOn=savedSandbox==='1';
+    document.getElementById('mp-chkSandbox').checked=sbxOn;
+    document.getElementById('mp-optSandbox').classList.toggle('active',sbxOn);
+
+    await mpRenderSavedRules();
+
+    // Handle URL query params for OtakuVid
+    const params=parseParamsFromUrl();
+    if(params) showPlayer(params.malId,params.epNum,params.lang);
+
+    // Handle MegaPlayer URL query param: ?mpurl=...
+    const sp=new URLSearchParams(window.location.search);
+    if(sp.has('mpurl')){
+        const mpUrl=sp.get('mpurl');
+        const mpRef=sp.get('mpref')||'';
+        const mpOrig=sp.get('mporigin')||'';
+        document.getElementById('mp-urlIn').value=mpUrl;
+        if(mpRef) document.getElementById('mp-refIn').value=mpRef;
+        if(mpOrig) document.getElementById('mp-origIn').value=mpOrig;
+        mpShowUrlTypeBadge(mpUrl);
+        openMegaPlayer();
+        mpLoadStream(mpUrl,mpRef,mpOrig,true);
     }
-    // Enter inside modal url field triggers play
-    if(e.key==='Enter'&&e.target===document.getElementById('dm-url-inp')) directPlay();
 });
 
-/* ─────────────────────────────────────────────
-   INIT
-───────────────────────────────────────────── */
-// Pre-fill proxy with default (Anivexa)
-document.getElementById('dm-proxy-inp').value = PROXY_PRESETS.anivexa;
-
+/* Public API */
 window.OtakuVidAPI = {
     getStreams: getOtakuVidStreams,
     search: searchOtakuVid,
     loadDatasets: loadAllDatasets,
     getProxyUrl,
-    openDirectPlayer: openDirectModal
+    openMegaPlayer,
+    closeMegaPlayer,
 };
-
-window.addEventListener('DOMContentLoaded',()=>{
-    const params=parseParamsFromUrl();
-    if(params) showPlayer(params.malId,params.epNum,params.lang);
-});
 </script>
 </body>
 </html>
