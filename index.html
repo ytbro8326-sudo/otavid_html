@@ -1096,11 +1096,23 @@
             // Referer required by the source CDN for THIS stream. Falls back to the
             // default if the dataset entry doesn't specify one.
             const streamReferer = stream.referer || DEFAULT_REFERER;
-            const proxiedUrl = getProxyUrl(stream.url, streamReferer);
+
+            // IMPORTANT: hls.js resolves every relative URI it encounters inside a
+            // playlist (variant playlists, keys, segments) against whatever URL
+            // you pass to loadSource(). If we pass the PROXIED url here, that base
+            // becomes "anivexa.onrender.com" instead of the real CDN directory, and
+            // every relative reference inside the manifest resolves to a
+            // nonsensical address on the proxy host itself (404s / broken
+            // playback), even though xhrSetup below tries to proxy each request.
+            // So: hls.js gets the REAL url for all its internal bookkeeping, and
+            // the proxying happens only at the very last step, in xhrSetup, right
+            // before the actual network call is made.
+            const realUrl = stream.url;
+            const proxiedUrl = getProxyUrl(realUrl, streamReferer); // used only for the non-hls.js (native) fallback path below
 
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
-            if (proxiedUrl.includes('.m3u8') || proxiedUrl.includes('.txt') || (stream.url && stream.url.includes('.txt'))) {
+            if (realUrl.includes('.m3u8') || realUrl.includes('.txt')) {
                 if (Hls.isSupported()) {
                     hlsInstance = new Hls({
                         // THE ACTUAL FIX:
@@ -1124,7 +1136,7 @@
                             return new Request(context.url, initParams);
                         }
                     });
-                    hlsInstance.loadSource(proxiedUrl);
+                    hlsInstance.loadSource(realUrl);
                     hlsInstance.attachMedia(video);
                     hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
                         video.play().catch(() => { video.muted = true; video.play(); });
